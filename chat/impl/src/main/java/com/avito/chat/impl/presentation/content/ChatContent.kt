@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -124,7 +125,10 @@ private fun ChatContent(
         ) {
 
             if (currentState.messages.isNotEmpty()){
-                LazyColumn{
+                LazyColumn(
+                    modifier = Modifier.weight(8f),
+                    reverseLayout = true
+                ){
                     items(
                         items = currentState.messages,
                         key = {
@@ -137,9 +141,11 @@ private fun ChatContent(
             }else Spacer(Modifier.weight(1f))
 
             InputField(
+                modifier = Modifier.weight(1f),
                 text = currentState.messageField,
                 onTextChange = onFieldValueChange,
-                onSend = onSend
+                onSend = onSend,
+                onClear = onClearFieldClick
             )
 
         }
@@ -190,12 +196,14 @@ fun MessageItem(
 
 @Composable
 fun InputField(
+    modifier: Modifier = Modifier,
     text: String,
     onTextChange: (String) -> Unit,
-    onSend: () -> Unit
+    onSend: () -> Unit,
+    onClear: () -> Unit
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .background(Color.White)
             .padding(8.dp),
@@ -225,15 +233,31 @@ fun InputField(
         }
 
         Spacer(modifier = Modifier.width(8.dp))
+        Column(
+            modifier = Modifier.padding(end = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
 
-        Icon(
-            modifier = Modifier
-                .clip(CircleShape)
-                .clickable{
-                    onSend()
-                },
-            painter = painterResource(com.avito.chat.impl.R.drawable.send_24px),
-            contentDescription = "Send message"
-        )
+            Icon(
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .clickable {
+                        onSend()
+                    },
+                painter = painterResource(com.avito.chat.impl.R.drawable.send_24px),
+                contentDescription = "Send message"
+            )
+
+            Icon(
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .clickable {
+                        onClear()
+                    },
+                painter = painterResource(com.avito.chat.impl.R.drawable.undo_24px),
+                contentDescription = "Send message"
+            )
+
+        }
     }
 }

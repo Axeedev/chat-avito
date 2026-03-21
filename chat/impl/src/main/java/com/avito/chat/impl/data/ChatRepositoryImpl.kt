@@ -5,6 +5,7 @@ import com.avito.core.common.Message
 import com.avito.core.database.data.MessageDao
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class ChatRepositoryImpl @Inject constructor(
@@ -12,7 +13,11 @@ class ChatRepositoryImpl @Inject constructor(
 ) : ChatRepository{
 
     override fun getMessages(chatId: Int): Flow<List<Message>> {
-        return flow { emit(listOf()) }
+        return messageDao.getMessagesByChatId(chatId).map { list ->
+            list.map {
+                it.toMessage()
+            }
+        }
     }
 
     override suspend fun insertMessage(message: Message) {
