@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="GradleMigrationSettings" migrationVersion="1" />
+  <component name="GradleSettings">
+    <option name="linkedExternalProjectsSettings">
+      <GradleProjectSettings>
+        <option name="testRunner" value="CHOOSE_PER_TEST" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/app" />
+            <option value="$PROJECT_DIR$/auth" />
+            <option value="$PROJECT_DIR$/auth/api" />
+            <option value="$PROJECT_DIR$/auth/impl" />
+            <option value="$PROJECT_DIR$/chat" />
+            <option value="$PROJECT_DIR$/chat/api" />
+            <option value="$PROJECT_DIR$/chat/impl" />
+            <option value="$PROJECT_DIR$/chatlist" />
+            <option value="$PROJECT_DIR$/chatlist/api" />
+            <option value="$PROJECT_DIR$/chatlist/impl" />
+            <option value="$PROJECT_DIR$/core" />
+            <option value="$PROJECT_DIR$/core/common" />
+            <option value="$PROJECT_DIR$/core/database" />
+            <option value="$PROJECT_DIR$/core/ui" />
+            <option value="$PROJECT_DIR$/navigation" />
+            <option value="$PROJECT_DIR$/navigation/api" />
+            <option value="$PROJECT_DIR$/navigation/impl" />
+            <option value="$PROJECT_DIR$/profile" />
+            <option value="$PROJECT_DIR$/profile/api" />
+            <option value="$PROJECT_DIR$/profile/impl" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+    </option>
+  </component>
+</project>

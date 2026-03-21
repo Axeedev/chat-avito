@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "862991539417",
+    "project_id": "chat-87ea3",
+    "storage_bucket": "chat-87ea3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:862991539417:android:65b95903b82675cae732c8",
+        "android_client_info": {
+          "package_name": "com.avito.avitotestchat"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCmhkTyzE9ts72TuEq6Ukii6w8cNHBbOKQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
