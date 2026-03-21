@@ -11,6 +11,7 @@ import com.avito.chat.impl.presentation.store.ChatStoreFactory.ChatStoreMessage.
 import com.avito.chat.impl.presentation.store.ChatStoreFactory.ChatStoreMessage.InputMessage
 import com.avito.chat.impl.presentation.store.ChatStoreFactory.ChatStoreMessage.MessagesLoaded
 import com.avito.core.common.Message
+import com.avito.core.common.Role
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -88,7 +89,7 @@ class ChatStoreFactory @Inject constructor(
 
                 ChatIntent.SendMessage -> {
                     scope.launch {
-//                        insertMessageUseCase()
+                        insertMessageUseCase(Message(0,"",Role.USER, System.currentTimeMillis()))
                     }
                 }
             }

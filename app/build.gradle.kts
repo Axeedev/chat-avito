@@ -53,6 +53,8 @@ dependencies {
     implementation(project(":auth:api"))
     implementation(project(":chat:api"))
     implementation(project(":chat:impl"))
+    implementation(project(":tokens:api"))
+    implementation(project(":tokens:impl"))
     implementation(project(":chatlist:api"))
     implementation(project(":chatlist:impl"))
     implementation(project(":auth:impl"))

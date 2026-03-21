@@ -1,0 +1,10 @@
+package com.avito.chat.impl.data.remote.dtos
+
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class ChatResponseDto(
+    @SerialName("choices")
+    val choices: List<ChoiceDto>
+)

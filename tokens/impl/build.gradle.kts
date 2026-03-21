@@ -1,12 +1,12 @@
 plugins {
     alias(libs.plugins.android.library)
-    alias(libs.plugins.kotlin.compose)
     id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
+    kotlin("plugin.serialization") version "2.3.20"
 }
 
 android {
-    namespace = "com.avito.chat.impl"
+    namespace = "com.avito.tokens.impl"
     compileSdk {
         version = release(36) {
             minorApiLevel = 1
@@ -35,32 +35,15 @@ android {
     }
 }
 
+
+
+
 dependencies {
-    implementation(libs.kotlinx.serialization.json)
-    implementation(libs.converter.kotlinx.serialization)
-    implementation(libs.retrofit)
-    implementation(platform(libs.okhttp.bom))
-    implementation(libs.okhttp)
-    implementation(libs.logging.interceptor)
-    implementation(libs.androidx.hilt.navigation.compose)
+    implementation("com.google.protobuf:protobuf-javalite:4.34.1")
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
-    compileOnly(libs.javax.inject)
-    implementation(project(":core:database"))
-    implementation(project(":core:common"))
-    implementation(project(":core:ui"))
     implementation(project(":core:network"))
-    implementation(project(":chat:api"))
     implementation(project(":tokens:api"))
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.mvikotlin)
-    implementation(libs.mvikotlin.main)
-    implementation(libs.mvikotlin.logging)
-    implementation(libs.mvikotlin.extensions1.coroutines)
-    implementation(libs.androidx.compose.ui)
-    implementation(libs.androidx.compose.ui.graphics)
-    implementation(libs.androidx.compose.ui.tooling.preview)
-    implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
