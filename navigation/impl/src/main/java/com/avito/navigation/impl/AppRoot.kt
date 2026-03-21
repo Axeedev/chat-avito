@@ -45,7 +45,7 @@ fun AppRoot(
     loginScreen: @Composable () -> Unit,
     signupScreen: @Composable () -> Unit,
     chatListScreen: @Composable () -> Unit,
-    chatScreen: @Composable (Int) -> Unit,
+    chatScreen: @Composable (Int?) -> Unit,
     profileScreen: @Composable () -> Unit
 ) {
     val backStack by backStackStateFlow.collectAsState()

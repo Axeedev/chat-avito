@@ -5,5 +5,5 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ChatRoute(
-    val id: Int
+    val id: Int?
 ) : NavKey

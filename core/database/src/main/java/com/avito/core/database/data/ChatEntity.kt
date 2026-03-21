@@ -1,8 +1,11 @@
 package com.avito.core.database.data
 
 import androidx.room.Entity
+import androidx.room.PrimaryKey
 
-@Entity("chat")
+@Entity("chats")
 data class ChatEntity(
-    val id: Int = 0
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,
+    val title: String
 )

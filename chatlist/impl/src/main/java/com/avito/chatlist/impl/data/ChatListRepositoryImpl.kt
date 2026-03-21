@@ -1,4 +1,4 @@
-package com.avito.chatlist.impl
+package com.avito.chatlist.impl.data
 
 import com.avito.chatlist.api.ChatListRepository
 import com.avito.core.common.Chat
@@ -16,5 +16,19 @@ class ChatListRepositoryImpl @Inject constructor(
             .map { chatEntities ->
                 chatEntities.map { it.toChat() }
             }
+    }
+
+    override suspend fun addChat(chat: Chat) {
+        chatDao.insertChat(chat.toChatEntity())
+    }
+
+    override suspend fun getChatById(chatId: Int): Chat {
+        return chatDao.getChatById(chatId).toChat()
+    }
+
+    override fun getChatsByTitle(chatTitle: String): Flow<List<Chat>> {
+        return chatDao.getChatsByTitle(chatTitle).map { chatEntities ->
+            chatEntities.map { it.toChat() }
+        }
     }
 }

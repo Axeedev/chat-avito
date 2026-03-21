@@ -6,6 +6,10 @@ plugins {
     id("com.google.gms.google-services")
 }
 
+configurations.all {
+    exclude(group = "com.intellij", module = "annotations")
+}
+
 android {
     namespace = "com.avito.avitotestchat"
     compileSdk {
@@ -49,6 +53,7 @@ dependencies {
     implementation(project(":auth:api"))
     implementation(project(":chat:api"))
     implementation(project(":chatlist:api"))
+    implementation(project(":chatlist:impl"))
     implementation(project(":auth:impl"))
     implementation(project(":profile:impl"))
     implementation(libs.hilt.android)

@@ -25,6 +25,7 @@ fun AppTextField(
     placeholderText: String,
     leadingIconId: Int,
     value: String,
+    onValueChange: (String) -> Unit = {}
 ) {
     TextField(
         modifier = modifier
@@ -33,8 +34,7 @@ fun AppTextField(
                 shape = RoundedCornerShape(12.dp)
             ),
         shape = RoundedCornerShape(12.dp),
-        enabled = false,
-        onValueChange = {},
+        onValueChange = onValueChange,
         value = value,
         colors = TextFieldDefaults.colors(
             disabledContainerColor = MaterialTheme.colorScheme.onPrimaryContainer,
