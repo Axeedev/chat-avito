@@ -14,7 +14,7 @@ class ChatListRepositoryImpl @Inject constructor(
     override fun getChats(): Flow<List<Chat>> {
         return chatDao.getChats()
             .map { chatEntities ->
-                chatEntities.map { it.toChat() }
+                chatEntities.map { it.toChat(listOf()) }
             }
     }
 
@@ -23,12 +23,12 @@ class ChatListRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getChatById(chatId: Int): Chat {
-        return chatDao.getChatById(chatId).toChat()
+        return chatDao.getChatById(chatId).toChat(listOf())
     }
 
     override fun getChatsByTitle(chatTitle: String): Flow<List<Chat>> {
         return chatDao.getChatsByTitle(chatTitle).map { chatEntities ->
-            chatEntities.map { it.toChat() }
+            chatEntities.map { it.toChat(listOf()) }
         }
     }
 }

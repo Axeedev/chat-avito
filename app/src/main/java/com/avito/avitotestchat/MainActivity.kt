@@ -4,12 +4,12 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.material3.Text
 import com.avito.auth.api.SignUpRoute
 import com.avito.auth.impl.presentation.content.LoginScreen
 import com.avito.auth.impl.presentation.content.SignupScreen
 import com.avito.avitotestchat.ui.theme.AvitoTestChatTheme
 import com.avito.chat.api.ChatRoute
+import com.avito.chat.impl.presentation.content.ChatContent
 import com.avito.chatlist.api.ChatListRoute
 import com.avito.chatlist.impl.presentation.content.ChatListScreen
 import com.avito.navigation.api.AppNavigator
@@ -70,9 +70,9 @@ class MainActivity : ComponentActivity() {
 
                     },
                     chatScreen = {
-                        Text(
-                            text = "Chat screen: $it"
-                        )
+                        ChatContent(chatId = it) {
+                            navigator.goBack()
+                        }
                     },
                     profileScreen = {
                         ProfileScreen {

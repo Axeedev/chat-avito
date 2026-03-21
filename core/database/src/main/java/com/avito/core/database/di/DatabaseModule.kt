@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.avito.core.database.data.ChatDao
 import com.avito.core.database.data.ChatDatabase
+import com.avito.core.database.data.MessageDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -34,6 +35,11 @@ interface DatabaseModule {
             return chatDatabase.chatDao()
         }
 
-    }
+        @Singleton
+        @Provides
+        fun provideMessageDao(chatDatabase: ChatDatabase): MessageDao{
+            return chatDatabase.messageDao()
+        }
 
+    }
 }
