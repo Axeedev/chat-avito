@@ -2,9 +2,11 @@
 
 package com.avito.chat.impl.presentation.content
 
-import android.util.Log
+import android.content.Context
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
@@ -41,6 +44,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -103,20 +107,33 @@ private fun ChatContent(
     onBackClick: () -> Unit
 ) {
     val currentState = state.value
+    val context = LocalContext.current
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
                             text = currentState.chatTitle,
                             overflow = TextOverflow.Ellipsis,
                             maxLines = 1
                         )
+                        when{
+                            currentState is ChatScreenState.ChatScreenStateLoaded
+                                    && currentState.isResponsePending -> TypingText()
+                            else -> Text(
+                                text = "online",
+                                fontSize = 12.sp,
+                                color = Color.Gray
+                            )
+                        }
 
+                    }
                 },
                 navigationIcon = {
                     Icon(
                         modifier = Modifier
+                            .padding(start = 8.dp)
                             .clip(CircleShape)
                             .clickable {
                                 onBackClick()
@@ -124,65 +141,90 @@ private fun ChatContent(
                         painter = painterResource(R.drawable.ic_back),
                         contentDescription = "go back"
                     )
-                },
-                actions = {
-                    if (currentState.isResponsePending){
-                        CircularProgressIndicator(
-                            color = Color.Black
-                        )
-                    }
                 }
             )
         }
 
     ) { paddingValues ->
         val listState = rememberLazyListState()
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            val isAtBottom by remember {
-                derivedStateOf {
-                    listState.firstVisibleItemIndex >= currentState.messages.lastIndex - 1
-                }
-            }
 
-            LaunchedEffect(currentState.messages.size) {
-                if (isAtBottom) {
-                    listState.animateScrollToItem(0)
-                }
-            }
-
-            if (currentState.messages.isNotEmpty()) {
-                LazyColumn(
-                    modifier = Modifier.weight(8f),
-                    state = listState,
-                    reverseLayout = true
-                ) {
-                    items(
-                        items = currentState.messages,
-                        key = {
-                            it.id
-                        }
-                    ) { message ->
-                        MessageItem(message)
+            when (currentState) {
+                is ChatScreenState.ChatScreenInitial -> {
+                    Box(
+                        Modifier
+                            .fillMaxWidth()
+                            .weight(8f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
                     }
-                    if (currentState.isResponsePending){
-                        item {
-                            CircularProgressIndicator()
+                }
+
+                is ChatScreenState.ChatScreenStateLoaded -> {
+                    val isAtBottom by remember {
+                        derivedStateOf {
+                            listState.firstVisibleItemIndex >= currentState.messages.lastIndex - 1
                         }
                     }
 
-                }
-            } else {
-                Column(
-                    modifier = Modifier.weight(8f)
-                ) {
-                    Spacer(Modifier.weight(1f))
+                    LaunchedEffect(currentState.messages.size) {
+                        if (isAtBottom) {
+                            listState.animateScrollToItem(0)
+                        }
+                    }
+
+                    if (currentState.messages.isNotEmpty()) {
+                        LazyColumn(
+                            modifier = Modifier.weight(8f),
+                            state = listState,
+                            reverseLayout = true
+                        ) {
+                            items(
+                                items = currentState.messages,
+                                key = {
+                                    it.id
+                                }
+                            ) { message ->
+                                MessageItem(
+                                    message = message,
+                                    context = context
+                                )
+                            }
+                        }
+                    } else {
+                        Box(
+                            modifier = Modifier.weight(8f),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth(),
+                            ) {
+                                Icon(
+                                    modifier = Modifier
+                                        .align(Alignment.CenterHorizontally)
+                                        .size(75.dp),
+                                    painter = painterResource(com.avito.chat.impl.R.drawable.ic_no_messages),
+                                    contentDescription = "no messages"
+                                )
+                                Spacer(Modifier.size(16.dp))
+                                Text(
+                                    modifier = Modifier
+                                        .align(Alignment.CenterHorizontally),
+                                    text = "No messages yet",
+                                    color = Color.Gray
+                                )
+                            }
+                        }
+                    }
                 }
             }
-
             InputField(
                 modifier = Modifier.weight(1f),
                 text = currentState.messageField,
@@ -191,19 +233,20 @@ private fun ChatContent(
                 isInputFieldButtonsEnabled = currentState.isSendMessageButtonEnabled,
                 onClear = onClearFieldClick
             )
-
         }
     }
 }
 
 @Composable
 fun MessageItem(
-    message: Message
+    modifier: Modifier = Modifier,
+    message: Message,
+    context: Context,
 ) {
     val isUser = message.role == Role.USER
 
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start
     ) {
         Box(
@@ -217,14 +260,26 @@ fun MessageItem(
                         bottomStart = if (isUser) 16.dp else 4.dp,
                         bottomEnd = if (isUser) 4.dp else 16.dp
                     )
+                ).combinedClickable(
+                    onLongClick = {
+                        val intent = Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(
+                                Intent.EXTRA_TEXT,
+                                "Look at the message from my AI assistant: ${message.content}"
+                            )
+                        }
+                        context.startActivity(intent)
+                    },
+                    onClick = {}
                 )
                 .background(
                     if (isUser) Color(0xFF4CAF50) else Color.White
                 )
                 .padding(12.dp)
+
         ) {
             Column {
-
                 Text(
                     text = message.content,
                     color = if (isUser) Color.White else Color.Black,
@@ -310,8 +365,9 @@ fun InputField(
         }
     }
 }
+
 @Composable
-fun TypingDots() {
+fun TypingText() {
     var dots by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
@@ -326,5 +382,5 @@ fun TypingDots() {
         }
     }
 
-    Text(dots, color = Color.Gray)
+    Text("typing$dots", fontSize = 12.sp, color = Color.Gray)
 }

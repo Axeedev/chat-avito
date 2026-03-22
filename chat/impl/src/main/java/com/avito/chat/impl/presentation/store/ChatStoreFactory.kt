@@ -2,6 +2,7 @@
 
 package com.avito.chat.impl.presentation.store
 
+import android.content.Context
 import android.util.Log
 import com.arkivanov.mvikotlin.core.store.Reducer
 import com.arkivanov.mvikotlin.core.store.Store
@@ -11,12 +12,15 @@ import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
 import com.avito.chat.impl.domain.CreateChatUseCase
 import com.avito.chat.impl.domain.GetMessagesUseCase
 import com.avito.chat.impl.domain.InsertMessageUseCase
+import com.avito.chat.impl.presentation.store.ChatStoreFactory.ChatStoreMessage.ChatTitleLoaded
 import com.avito.chat.impl.presentation.store.ChatStoreFactory.ChatStoreMessage.ClearMessageField
 import com.avito.chat.impl.presentation.store.ChatStoreFactory.ChatStoreMessage.InputMessage
+import com.avito.chat.impl.presentation.store.ChatStoreFactory.ChatStoreMessage.MessageSent
 import com.avito.chat.impl.presentation.store.ChatStoreFactory.ChatStoreMessage.MessagesLoaded
 import com.avito.chatlist.api.ChatListRepository
 import com.avito.core.common.Message
 import com.avito.core.common.Role
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterNotNull
@@ -30,65 +34,121 @@ class ChatStoreFactory @Inject constructor(
     private val insertMessageUseCase: InsertMessageUseCase,
     private val getMessagesUseCase: GetMessagesUseCase,
     private val createChatUseCase: CreateChatUseCase,
-    private val chatListRepository: ChatListRepository
+    private val chatListRepository: ChatListRepository,
+    @param:ApplicationContext private val context: Context
 
 ) {
+    private val chatIdFlow: MutableStateFlow<Int?> = MutableStateFlow(null)
 
-    internal fun create(chatId: Int?): ChatStore = object : ChatStore,
-        Store<ChatIntent, ChatScreenState, ChatLabel> by storeFactory.create(
-            name = "ChatStore",
-            initialState = ChatScreenState(),
-            bootstrapper = BootstrapperImpl(),
-            executorFactory = {
-                ExecutorImpl()
-            },
-            reducer = ReducerImpl
-        ) {}.also {
+    internal fun create(chatId: Int?): ChatStore {
+
         chatIdFlow.value = chatId
+
+        return object : ChatStore,
+            Store<ChatIntent, ChatScreenState, ChatLabel> by storeFactory.create(
+                name = "ChatStore",
+                initialState = ChatScreenState.ChatScreenInitial(),
+                bootstrapper = BootstrapperImpl(),
+                executorFactory = {
+                    ExecutorImpl()
+                },
+                reducer = ReducerImpl
+            ) {}
     }
 
-    private val chatIdFlow: MutableStateFlow<Int?> = MutableStateFlow(null)
 
     private object ReducerImpl : Reducer<ChatScreenState, ChatStoreMessage> {
         override fun ChatScreenState.reduce(msg: ChatStoreMessage): ChatScreenState {
             return when (msg) {
                 ClearMessageField -> {
-                    copy(messageField = "")
+                    when (this) {
+                        is ChatScreenState.ChatScreenInitial -> {
+                            copy(messageField = "")
+                        }
+
+                        is ChatScreenState.ChatScreenStateLoaded -> {
+                            copy(messageField = "")
+                        }
+                    }
                 }
 
                 is InputMessage -> {
-                    copy(messageField = msg.messageContent)
+                    when (this) {
+                        is ChatScreenState.ChatScreenInitial -> {
+                            this
+                        }
+
+                        is ChatScreenState.ChatScreenStateLoaded -> {
+                            copy(messageField = msg.messageContent)
+                        }
+                    }
                 }
 
                 is MessagesLoaded -> {
-                    copy(messages = msg.messages)
-                }
-                ChatStoreMessage.ResponsePending -> {
-                    copy(
-                        messages = messages
-                    )
+                    if (this is ChatScreenState.ChatScreenStateLoaded) {
+                        copy(
+                            messages = msg.messages,
+                            chatTitle = chatTitle,
+                        )
+                    } else {
+                        ChatScreenState.ChatScreenStateLoaded(
+                            messages = msg.messages,
+                            chatTitle = chatTitle
+                        )
+                    }
                 }
 
-                ChatStoreMessage.MessageSent -> copy(messageField = "")
-                is ChatStoreMessage.ChatTitleLoaded -> {
-                    copy(chatTitle = msg.title)
+                MessageSent -> {
+                    when (this) {
+                        is ChatScreenState.ChatScreenInitial -> {
+                            this
+                        }
+
+                        is ChatScreenState.ChatScreenStateLoaded -> {
+                            copy(messageField = "", isResponsePending = true)
+                        }
+                    }
+                }
+
+                is ChatTitleLoaded -> {
+                    when (this) {
+                        is ChatScreenState.ChatScreenInitial -> {
+                            copy(chatTitle = msg.title)
+                        }
+
+                        is ChatScreenState.ChatScreenStateLoaded -> {
+                            copy(chatTitle = msg.title)
+                        }
+                    }
+                }
+
+                ChatStoreMessage.ReceiveAnswer -> {
+                    when (this) {
+                        is ChatScreenState.ChatScreenInitial -> {
+                            this
+                        }
+
+                        is ChatScreenState.ChatScreenStateLoaded -> {
+                            copy(isResponsePending = false)
+                        }
+                    }
                 }
             }
         }
     }
 
-    private inner class BootstrapperImpl: CoroutineBootstrapper<Action>() {
+    private inner class BootstrapperImpl : CoroutineBootstrapper<Action>() {
         override fun invoke() {
             scope.launch {
                 chatIdFlow
                     .onEach { id ->
-                        if (id == null){
+                        if (id == null) {
                             dispatch(Action.ChatTitleLoaded("New Chat"))
-                        }else{
+                            dispatch(Action.MessagesLoaded(listOf()))
+                        } else {
                             val chat = chatListRepository.getChatById(id)
                             dispatch(Action.ChatTitleLoaded(chat.title))
                         }
-
                     }
                     .filterNotNull()
                     .flatMapLatest { id ->
@@ -109,7 +169,7 @@ class ChatStoreFactory @Inject constructor(
                 }
 
                 is Action.ChatTitleLoaded -> {
-                    dispatch(ChatStoreMessage.ChatTitleLoaded(action.title))
+                    dispatch(ChatTitleLoaded(action.title))
                 }
             }
         }
@@ -130,35 +190,24 @@ class ChatStoreFactory @Inject constructor(
 
                 ChatIntent.SendMessage -> {
                     scope.launch {
-                        val message = state().messageField
-                        dispatch(ChatStoreMessage.MessageSent)
-                        val currentChatId = chatIdFlow.value
-                        if (currentChatId == null) {
-                            val chatId = createChatUseCase("New chat")
-                            Log.d("ExecutorImpl", chatId.toString())
-                            chatIdFlow.value = chatId.toInt()
-                            insertMessageUseCase(
-                                Message(
-                                    id = 0,
-                                    content = message,
-                                    role = Role.USER,
-                                    createdAt = System.currentTimeMillis()
-                                ),
-                                chatId = chatId.toInt()
-                            )
-                        } else {
-                            insertMessageUseCase(
-                                Message(
-                                    id = 0,
-                                    content = message,
-                                    role = Role.USER,
-                                    createdAt = System.currentTimeMillis()
-                                ),
-                                chatId = currentChatId
-                            )
-                        }
-                        dispatch(ChatStoreMessage.ResponsePending)
+                        if (state() is ChatScreenState.ChatScreenStateLoaded){
+                            val message = state().messageField
 
+                            val currentChatId = chatIdFlow.value
+                            val chatId = currentChatId ?: createChatUseCase("New chat").toInt()
+                            chatIdFlow.value = chatId
+                            dispatch(MessageSent)
+                            insertMessageUseCase(
+                                Message(
+                                    id = 0,
+                                    content = message,
+                                    role = Role.USER,
+                                    createdAt = System.currentTimeMillis()
+                                ),
+                                chatId
+                            )
+                            dispatch(ChatStoreMessage.ReceiveAnswer)
+                        }
                     }
                 }
             }
@@ -176,10 +225,11 @@ class ChatStoreFactory @Inject constructor(
 
         data class ChatTitleLoaded(val title: String) : ChatStoreMessage
 
-
-        data object ResponsePending : ChatStoreMessage
-
         data object MessageSent : ChatStoreMessage
+
+        data object ReceiveAnswer : ChatStoreMessage
+
+
     }
 
     private sealed interface Action {

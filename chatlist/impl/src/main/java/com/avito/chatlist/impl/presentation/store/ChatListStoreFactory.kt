@@ -49,7 +49,6 @@ class ChatListStoreFactory @Inject constructor(
                     }.cachedIn(
                         scope = CoroutineScope(Dispatchers.Main.immediate + SupervisorJob())
                     )
-
                 }
         }
     }

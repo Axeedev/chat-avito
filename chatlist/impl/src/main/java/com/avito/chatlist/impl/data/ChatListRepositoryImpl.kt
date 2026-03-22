@@ -8,31 +8,13 @@ import com.avito.chatlist.api.ChatListRepository
 import com.avito.chatlist.impl.domain.ImplChatListRepository
 import com.avito.core.common.Chat
 import com.avito.core.database.data.ChatDao
-import com.avito.core.database.data.ChatEntity
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class ChatListRepositoryImpl @Inject constructor(
     private val chatDao: ChatDao
 ) : ChatListRepository, ImplChatListRepository {
-//
-//    init {
-//
-//        CoroutineScope(Dispatchers.IO).launch {
-//
-//            val chats = (1..5000).map {
-//                ChatEntity(
-//                    title = "Chat $it",
-//                    createdAt = System.currentTimeMillis()
-//                )
-//            }
-//            chats.forEach { chatDao.insertChat(it) }
-//        }
-//    }
 
     override fun getChats(): Flow<PagingData<Chat>> {
         return Pager(

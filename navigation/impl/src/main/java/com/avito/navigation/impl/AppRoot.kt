@@ -57,7 +57,7 @@ fun AppRoot(
 
     ModalNavigationDrawer(
         drawerState = drawerState,
-        gesturesEnabled = currentScreen != SignUpRoute && currentScreen != LoginRoute && currentScreen != ChatRoute,
+        gesturesEnabled = currentScreen != SignUpRoute && currentScreen != LoginRoute && currentScreen !is ChatRoute,
         drawerContent = {
             ModalDrawerSheet {
                 drawerScreens.forEach { drawerScreen ->

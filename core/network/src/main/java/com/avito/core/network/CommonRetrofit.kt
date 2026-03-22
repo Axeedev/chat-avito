@@ -5,6 +5,7 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
+import java.util.concurrent.TimeUnit
 
 object CommonRetrofit {
 
@@ -19,6 +20,7 @@ object CommonRetrofit {
 
     private val unsafeOkHttpClient = getUnsafeOkHttpClient()
         .addInterceptor(interceptor)
+        .readTimeout(60, TimeUnit.SECONDS)
         .build()
 
     val builder: Retrofit.Builder = Retrofit
