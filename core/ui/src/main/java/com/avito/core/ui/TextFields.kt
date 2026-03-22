@@ -30,31 +30,30 @@ fun AppTextField(
     TextField(
         modifier = modifier
             .border(
-                BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceTint),
-                shape = RoundedCornerShape(12.dp)
+                BorderStroke(1.dp, Color.Gray.copy(0.05f)),
+                shape = RoundedCornerShape(25.dp)
             ),
         shape = RoundedCornerShape(12.dp),
         onValueChange = onValueChange,
         value = value,
         colors = TextFieldDefaults.colors(
-            disabledContainerColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            disabledIndicatorColor = Color.Transparent,
-            focusedContainerColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            unfocusedContainerColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            focusedContainerColor = Color.Gray.copy(alpha = 0.1f),
+            focusedIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent,
-            focusedIndicatorColor = MaterialTheme.colorScheme.onPrimary,
+        ),
+        textStyle = TextStyle(
+            color = Color.Black
         ),
         placeholder = {
             Text(
                 text = placeholderText,
-                color = MaterialTheme.colorScheme.onPrimary
+                color = Color.Gray.copy()
             )
         },
         leadingIcon = {
             Icon(
                 painter = painterResource(leadingIconId),
                 contentDescription = "set time",
-                tint = MaterialTheme.colorScheme.onPrimary
             )
         }
     )
@@ -75,7 +74,7 @@ fun AuthTextField(
     TextField(
         modifier = modifier
             .fillMaxWidth()
-            .border(1.dp, Color.Gray, RoundedCornerShape(12.dp)),
+            .border(1.dp, Color.Gray.copy(alpha = 0.2f), RoundedCornerShape(12.dp)),
         value = value,
         singleLine = true,
         enabled = enabled,
@@ -91,7 +90,7 @@ fun AuthTextField(
             fontSize = 15.sp,
         ),
         colors = TextFieldDefaults.colors(
-            cursorColor = MaterialTheme.colorScheme.onPrimary,
+            cursorColor = Color.Gray,
             unfocusedContainerColor = Color.Transparent,
             focusedContainerColor = Color.Transparent,
             focusedIndicatorColor = Color.Transparent,

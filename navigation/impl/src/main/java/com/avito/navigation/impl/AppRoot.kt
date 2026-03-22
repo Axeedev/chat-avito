@@ -1,6 +1,5 @@
 package com.avito.navigation.impl
 
-import android.util.Log
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.togetherWith
@@ -28,12 +27,12 @@ import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
-import com.avito.navigation.api.AppNavigator
-import com.avito.chatlist.api.ChatListRoute
-import com.avito.chat.api.ChatRoute
 import com.avito.auth.api.LoginRoute
-import com.avito.profile.api.ProfileRoute
 import com.avito.auth.api.SignUpRoute
+import com.avito.chat.api.ChatRoute
+import com.avito.chatlist.api.ChatListRoute
+import com.avito.navigation.api.AppNavigator
+import com.avito.profile.api.ProfileRoute
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
@@ -49,7 +48,6 @@ fun AppRoot(
     profileScreen: @Composable () -> Unit
 ) {
     val backStack by backStackStateFlow.collectAsState()
-    Log.d("AppRoot", backStack.joinToString(", "))
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
@@ -59,7 +57,7 @@ fun AppRoot(
 
     ModalNavigationDrawer(
         drawerState = drawerState,
-        gesturesEnabled = currentScreen != SignUpRoute && currentScreen != LoginRoute,
+        gesturesEnabled = currentScreen != SignUpRoute && currentScreen != LoginRoute && currentScreen != ChatRoute,
         drawerContent = {
             ModalDrawerSheet {
                 drawerScreens.forEach { drawerScreen ->

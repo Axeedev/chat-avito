@@ -296,6 +296,7 @@ internal fun AuthContent(
                                     onSignupClick()
                                 },
                             text = "Sign up",
+                            color = Color(0xFF10B981),
                             fontWeight = FontWeight.SemiBold,
                         )
                     }
@@ -313,7 +314,7 @@ fun GoogleSignInButton(
     Button(
         modifier = modifier,
         shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceTint),
+        border = BorderStroke(1.dp, Color.Gray.copy(alpha = 0.2f)),
         colors = ButtonDefaults.buttonColors(
             containerColor = Color.Transparent
         ),

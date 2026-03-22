@@ -14,12 +14,14 @@ import com.avito.chat.impl.domain.InsertMessageUseCase
 import com.avito.chat.impl.presentation.store.ChatStoreFactory.ChatStoreMessage.ClearMessageField
 import com.avito.chat.impl.presentation.store.ChatStoreFactory.ChatStoreMessage.InputMessage
 import com.avito.chat.impl.presentation.store.ChatStoreFactory.ChatStoreMessage.MessagesLoaded
+import com.avito.chatlist.api.ChatListRepository
 import com.avito.core.common.Message
 import com.avito.core.common.Role
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -27,7 +29,9 @@ class ChatStoreFactory @Inject constructor(
     private val storeFactory: StoreFactory,
     private val insertMessageUseCase: InsertMessageUseCase,
     private val getMessagesUseCase: GetMessagesUseCase,
-    private val createChatUseCase: CreateChatUseCase
+    private val createChatUseCase: CreateChatUseCase,
+    private val chatListRepository: ChatListRepository
+
 ) {
 
     internal fun create(chatId: Int?): ChatStore = object : ChatStore,
@@ -66,6 +70,9 @@ class ChatStoreFactory @Inject constructor(
                 }
 
                 ChatStoreMessage.MessageSent -> copy(messageField = "")
+                is ChatStoreMessage.ChatTitleLoaded -> {
+                    copy(chatTitle = msg.title)
+                }
             }
         }
     }
@@ -74,6 +81,15 @@ class ChatStoreFactory @Inject constructor(
         override fun invoke() {
             scope.launch {
                 chatIdFlow
+                    .onEach { id ->
+                        if (id == null){
+                            dispatch(Action.ChatTitleLoaded("New Chat"))
+                        }else{
+                            val chat = chatListRepository.getChatById(id)
+                            dispatch(Action.ChatTitleLoaded(chat.title))
+                        }
+
+                    }
                     .filterNotNull()
                     .flatMapLatest { id ->
                         getMessagesUseCase(id)
@@ -90,6 +106,10 @@ class ChatStoreFactory @Inject constructor(
             when (action) {
                 is Action.MessagesLoaded -> {
                     dispatch(MessagesLoaded(action.messages))
+                }
+
+                is Action.ChatTitleLoaded -> {
+                    dispatch(ChatStoreMessage.ChatTitleLoaded(action.title))
                 }
             }
         }
@@ -154,6 +174,9 @@ class ChatStoreFactory @Inject constructor(
 
         data class InputMessage(val messageContent: String) : ChatStoreMessage
 
+        data class ChatTitleLoaded(val title: String) : ChatStoreMessage
+
+
         data object ResponsePending : ChatStoreMessage
 
         data object MessageSent : ChatStoreMessage
@@ -162,6 +185,8 @@ class ChatStoreFactory @Inject constructor(
     private sealed interface Action {
 
         data class MessagesLoaded(val messages: List<Message>) : Action
+
+        data class ChatTitleLoaded(val title: String) : Action
 
     }
 

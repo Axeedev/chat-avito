@@ -37,6 +37,9 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.paging.compose)
+    implementation(libs.androidx.paging.runtime)
+    implementation(libs.androidx.room.paging)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.converter.kotlinx.serialization)
     implementation(libs.retrofit)
@@ -52,6 +55,7 @@ dependencies {
     implementation(project(":core:ui"))
     implementation(project(":core:network"))
     implementation(project(":chat:api"))
+    implementation(project(":chatlist:api"))
     implementation(project(":tokens:api"))
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.mvikotlin)

@@ -42,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -107,7 +108,9 @@ private fun ChatContent(
             CenterAlignedTopAppBar(
                 title = {
                         Text(
-                            text = currentState.chatTitle.ifEmpty { "New Chat" }
+                            text = currentState.chatTitle,
+                            overflow = TextOverflow.Ellipsis,
+                            maxLines = 1
                         )
 
                 },
@@ -166,7 +169,6 @@ private fun ChatContent(
                         MessageItem(message)
                     }
                     if (currentState.isResponsePending){
-                        Log.d("ChatContent", "PENDING")
                         item {
                             CircularProgressIndicator()
                         }
@@ -186,6 +188,7 @@ private fun ChatContent(
                 text = currentState.messageField,
                 onTextChange = onFieldValueChange,
                 onSend = onSend,
+                isInputFieldButtonsEnabled = currentState.isSendMessageButtonEnabled,
                 onClear = onClearFieldClick
             )
 
@@ -239,10 +242,13 @@ fun MessageItem(
 fun InputField(
     modifier: Modifier = Modifier,
     text: String,
+    isInputFieldButtonsEnabled: Boolean,
     onTextChange: (String) -> Unit,
     onSend: () -> Unit,
     onClear: () -> Unit
 ) {
+
+    val tintColor = if (isInputFieldButtonsEnabled) Color.Black else Color.Gray.copy(alpha = 0.4f)
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -283,20 +289,22 @@ fun InputField(
                 modifier = Modifier
                     .clip(CircleShape)
                     .clickable {
-                        onSend()
+                        if (isInputFieldButtonsEnabled) onSend()
                     },
                 painter = painterResource(com.avito.chat.impl.R.drawable.send_24px),
-                contentDescription = "Send message"
+                contentDescription = "Send message",
+                tint = tintColor
             )
 
             Icon(
                 modifier = Modifier
                     .clip(CircleShape)
                     .clickable {
-                        onClear()
+                        if (isInputFieldButtonsEnabled) onClear()
                     },
                 painter = painterResource(com.avito.chat.impl.R.drawable.undo_24px),
-                contentDescription = "Send message"
+                contentDescription = "Send message",
+                tint = tintColor
             )
 
         }

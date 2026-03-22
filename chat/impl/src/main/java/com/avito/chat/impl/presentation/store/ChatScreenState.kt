@@ -7,4 +7,7 @@ data class ChatScreenState(
     val messageField: String = "",
     val messages: List<Message> = listOf(),
     val isResponsePending: Boolean = false
-)
+){
+    val isSendMessageButtonEnabled
+        get() = messageField.isNotEmpty()
+}
