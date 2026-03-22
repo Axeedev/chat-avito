@@ -2,6 +2,7 @@
 
 package com.avito.chat.impl.presentation.content
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -9,7 +10,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -18,10 +18,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
@@ -30,6 +32,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,20 +55,21 @@ import com.avito.core.common.Message
 import com.avito.core.common.Role
 import com.avito.core.ui.R
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 
 @Composable
 fun ChatContent(
     viewModel: ChatViewModel = hiltViewModel(),
     chatId: Int?,
     onBackClick: () -> Unit
-){
+) {
 
     val store = viewModel.createStore(chatId)
     val state = store.stateFlow.collectAsState()
 
     LaunchedEffect(Unit) {
         store.labels.collect {
-            when(it){
+            when (it) {
                 ChatLabel.ClickBack -> {
                     onBackClick()
                 }
@@ -92,53 +100,86 @@ private fun ChatContent(
     onClearFieldClick: () -> Unit,
     onSend: () -> Unit,
     onBackClick: () -> Unit
-){
+) {
     val currentState = state.value
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
-                    Text(
-                        text = currentState.chatTitle.ifEmpty { "New Chat" }
-                    )
+                        Text(
+                            text = currentState.chatTitle.ifEmpty { "New Chat" }
+                        )
+
                 },
                 navigationIcon = {
                     Icon(
                         modifier = Modifier
                             .clip(CircleShape)
-                            .clickable{
+                            .clickable {
                                 onBackClick()
                             },
                         painter = painterResource(R.drawable.ic_back),
                         contentDescription = "go back"
                     )
+                },
+                actions = {
+                    if (currentState.isResponsePending){
+                        CircularProgressIndicator(
+                            color = Color.Black
+                        )
+                    }
                 }
             )
         }
 
     ) { paddingValues ->
-
+        val listState = rememberLazyListState()
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
+            val isAtBottom by remember {
+                derivedStateOf {
+                    listState.firstVisibleItemIndex >= currentState.messages.lastIndex - 1
+                }
+            }
 
-            if (currentState.messages.isNotEmpty()){
+            LaunchedEffect(currentState.messages.size) {
+                if (isAtBottom) {
+                    listState.animateScrollToItem(0)
+                }
+            }
+
+            if (currentState.messages.isNotEmpty()) {
                 LazyColumn(
                     modifier = Modifier.weight(8f),
+                    state = listState,
                     reverseLayout = true
-                ){
+                ) {
                     items(
                         items = currentState.messages,
                         key = {
                             it.id
                         }
-                    ){message ->
+                    ) { message ->
                         MessageItem(message)
                     }
+                    if (currentState.isResponsePending){
+                        Log.d("ChatContent", "PENDING")
+                        item {
+                            CircularProgressIndicator()
+                        }
+                    }
+
                 }
-            }else Spacer(Modifier.weight(1f))
+            } else {
+                Column(
+                    modifier = Modifier.weight(8f)
+                ) {
+                    Spacer(Modifier.weight(1f))
+                }
+            }
 
             InputField(
                 modifier = Modifier.weight(1f),
@@ -158,7 +199,7 @@ fun MessageItem(
 ) {
     val isUser = message.role == Role.USER
 
-    Row (
+    Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start
     ) {
@@ -260,4 +301,22 @@ fun InputField(
 
         }
     }
+}
+@Composable
+fun TypingDots() {
+    var dots by remember { mutableStateOf("") }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            dots = when (dots) {
+                "" -> "."
+                "." -> ".."
+                ".." -> "..."
+                else -> ""
+            }
+            delay(400)
+        }
+    }
+
+    Text(dots, color = Color.Gray)
 }

@@ -61,7 +61,7 @@ class MainActivity : ComponentActivity() {
                     chatListScreen = {
                         ChatListScreen(
                             onNewChatClick = {
-                                navigator.navigateTo(ChatRoute(0))
+                                navigator.navigateTo(ChatRoute(null))
                             },
                             onChatClick = {
                                 navigator.navigateTo(ChatRoute(it))

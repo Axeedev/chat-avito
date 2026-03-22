@@ -2,6 +2,7 @@ package com.avito.chat.impl.data.remote
 
 import com.avito.chat.impl.data.remote.dtos.ChatRequestDto
 import com.avito.chat.impl.data.remote.dtos.ChatResponseDto
+import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.Header
 import retrofit2.http.Headers
@@ -13,10 +14,10 @@ interface ChatApiService {
         "Content-Type: application/json",
         "Accept: application/json"
     )
-    @POST("completions")
-    suspend fun getAssistantRequest(
+    @POST("chat/completions")
+    suspend fun getAssistantResponse(
         @Header("Authorization") authorization: String,
         @Body chatRequest: ChatRequestDto
-    ): Result<ChatResponseDto>
+    ): Response<ChatResponseDto>
 
 }

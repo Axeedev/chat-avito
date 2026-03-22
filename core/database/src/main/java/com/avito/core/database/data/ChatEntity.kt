@@ -9,5 +9,5 @@ data class ChatEntity(
     val id: Int = 0,
     val title: String,
     val createdAt: Long,
-    val updatedAt: Long
+    val updatedAt: Long? = null
 )

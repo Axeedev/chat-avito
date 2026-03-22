@@ -22,6 +22,7 @@
             <option value="$PROJECT_DIR$/core" />
             <option value="$PROJECT_DIR$/core/common" />
             <option value="$PROJECT_DIR$/core/database" />
+            <option value="$PROJECT_DIR$/core/network" />
             <option value="$PROJECT_DIR$/core/ui" />
             <option value="$PROJECT_DIR$/navigation" />
             <option value="$PROJECT_DIR$/navigation/api" />
@@ -29,6 +30,9 @@
             <option value="$PROJECT_DIR$/profile" />
             <option value="$PROJECT_DIR$/profile/api" />
             <option value="$PROJECT_DIR$/profile/impl" />
+            <option value="$PROJECT_DIR$/tokens" />
+            <option value="$PROJECT_DIR$/tokens/api" />
+            <option value="$PROJECT_DIR$/tokens/impl" />
           </set>
         </option>
       </GradleProjectSettings>

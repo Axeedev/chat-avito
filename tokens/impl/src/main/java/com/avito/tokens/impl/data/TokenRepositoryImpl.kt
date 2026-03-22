@@ -9,7 +9,7 @@ class TokenRepositoryImpl @Inject constructor(
     override suspend fun getValidAccessToken(): String {
 
         val response = authApiService.getAccessToken(
-            authorization = "Basic ZjY5YmZhNzQtYjJjMy00YWMzLTgyMDQtODI4N2E1MjA4NjQ5OjAzZTg1OWQwLTNhZjAtNDI5YS1hMzI1LWM0MjM1MzdlNTM5OA==",
+            authorization = "Basic ZjY5YmZhNzQtYjJjMy00YWMzLTgyMDQtODI4N2E1MjA4NjQ5OmI2ODk3YmI1LTBlY2MtNGQ5ZS04NDhjLTcwNDVjMWNmYTg4OQ==",
             rqUid = "f69bfa74-b2c3-4ac3-8204-8287a5208649",
         )
 

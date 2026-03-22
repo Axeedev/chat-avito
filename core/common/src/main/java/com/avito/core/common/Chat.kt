@@ -5,5 +5,5 @@ data class Chat(
     val title: String,
     val messages: List<Message>,
     val createdAt: Long,
-    val updatedAt: Long
+    val updatedAt: Long?
 )

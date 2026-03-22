@@ -1,10 +1,14 @@
+@file:OptIn(ExperimentalCoroutinesApi::class)
+
 package com.avito.chat.impl.presentation.store
 
+import android.util.Log
 import com.arkivanov.mvikotlin.core.store.Reducer
 import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineBootstrapper
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
+import com.avito.chat.impl.domain.CreateChatUseCase
 import com.avito.chat.impl.domain.GetMessagesUseCase
 import com.avito.chat.impl.domain.InsertMessageUseCase
 import com.avito.chat.impl.presentation.store.ChatStoreFactory.ChatStoreMessage.ClearMessageField
@@ -12,24 +16,34 @@ import com.avito.chat.impl.presentation.store.ChatStoreFactory.ChatStoreMessage.
 import com.avito.chat.impl.presentation.store.ChatStoreFactory.ChatStoreMessage.MessagesLoaded
 import com.avito.core.common.Message
 import com.avito.core.common.Role
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class ChatStoreFactory @Inject constructor(
     private val storeFactory: StoreFactory,
     private val insertMessageUseCase: InsertMessageUseCase,
-    private val getMessagesUseCase: GetMessagesUseCase
+    private val getMessagesUseCase: GetMessagesUseCase,
+    private val createChatUseCase: CreateChatUseCase
 ) {
 
     internal fun create(chatId: Int?): ChatStore = object : ChatStore,
         Store<ChatIntent, ChatScreenState, ChatLabel> by storeFactory.create(
             name = "ChatStore",
             initialState = ChatScreenState(),
-            bootstrapper = BootstrapperImpl(chatId),
-            executorFactory = ::ExecutorImpl,
+            bootstrapper = BootstrapperImpl(),
+            executorFactory = {
+                ExecutorImpl()
+            },
             reducer = ReducerImpl
-        ) {}
+        ) {}.also {
+        chatIdFlow.value = chatId
+    }
 
+    private val chatIdFlow: MutableStateFlow<Int?> = MutableStateFlow(null)
 
     private object ReducerImpl : Reducer<ChatScreenState, ChatStoreMessage> {
         override fun ChatScreenState.reduce(msg: ChatStoreMessage): ChatScreenState {
@@ -45,20 +59,27 @@ class ChatStoreFactory @Inject constructor(
                 is MessagesLoaded -> {
                     copy(messages = msg.messages)
                 }
+                ChatStoreMessage.ResponsePending -> {
+                    copy(
+                        messages = messages
+                    )
+                }
+
+                ChatStoreMessage.MessageSent -> copy(messageField = "")
             }
         }
     }
 
-    private inner class BootstrapperImpl(
-        private val chatId: Int?
-    ) : CoroutineBootstrapper<Action>() {
+    private inner class BootstrapperImpl: CoroutineBootstrapper<Action>() {
         override fun invoke() {
             scope.launch {
-                chatId?.let {
-                    getMessagesUseCase(chatId).collect { messages ->
+                chatIdFlow
+                    .filterNotNull()
+                    .flatMapLatest { id ->
+                        getMessagesUseCase(id)
+                    }.collect { messages ->
                         dispatch(Action.MessagesLoaded(messages))
                     }
-                }
             }
         }
     }
@@ -89,7 +110,35 @@ class ChatStoreFactory @Inject constructor(
 
                 ChatIntent.SendMessage -> {
                     scope.launch {
-                        insertMessageUseCase(Message(0,"",Role.USER, System.currentTimeMillis()))
+                        val message = state().messageField
+                        dispatch(ChatStoreMessage.MessageSent)
+                        val currentChatId = chatIdFlow.value
+                        if (currentChatId == null) {
+                            val chatId = createChatUseCase("New chat")
+                            Log.d("ExecutorImpl", chatId.toString())
+                            chatIdFlow.value = chatId.toInt()
+                            insertMessageUseCase(
+                                Message(
+                                    id = 0,
+                                    content = message,
+                                    role = Role.USER,
+                                    createdAt = System.currentTimeMillis()
+                                ),
+                                chatId = chatId.toInt()
+                            )
+                        } else {
+                            insertMessageUseCase(
+                                Message(
+                                    id = 0,
+                                    content = message,
+                                    role = Role.USER,
+                                    createdAt = System.currentTimeMillis()
+                                ),
+                                chatId = currentChatId
+                            )
+                        }
+                        dispatch(ChatStoreMessage.ResponsePending)
+
                     }
                 }
             }
@@ -105,6 +154,9 @@ class ChatStoreFactory @Inject constructor(
 
         data class InputMessage(val messageContent: String) : ChatStoreMessage
 
+        data object ResponsePending : ChatStoreMessage
+
+        data object MessageSent : ChatStoreMessage
     }
 
     private sealed interface Action {

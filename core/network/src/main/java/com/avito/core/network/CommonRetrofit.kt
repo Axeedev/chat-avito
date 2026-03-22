@@ -21,11 +21,9 @@ object CommonRetrofit {
         .addInterceptor(interceptor)
         .build()
 
-
     val builder: Retrofit.Builder = Retrofit
         .Builder()
         .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
         .client(unsafeOkHttpClient)
-
 
 }

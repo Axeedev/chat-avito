@@ -10,9 +10,9 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface ChatDao {
 
-
     @Query("""
         SELECT * FROM chats
+        ORDER BY updatedAt DESC
     """)
     fun getChats(): Flow<List<ChatEntity>>
 
@@ -20,9 +20,24 @@ interface ChatDao {
         """
             SELECT * FROM chats
             WHERE title LIKE '%' || :title || '%'
+            ORDER BY updatedAt DESC
         """
     )
     fun getChatsByTitle(title: String) : Flow<List<ChatEntity>>
+
+    @Query("""
+        UPDATE chats
+        SET updatedAt = :updatedAt
+        WHERE id = :chatId
+    """)
+    suspend fun updateChat(chatId: Int, updatedAt: Long)
+
+    @Query("""
+        UPDATE chats
+        SET updatedAt = :updatedAt, title = :newTitle
+        WHERE id = :chatId
+    """)
+    suspend fun updateChatTitle(chatId: Int, updatedAt: Long, newTitle: String)
 
     @Query("""
         SELECT * FROM chats
@@ -34,7 +49,6 @@ interface ChatDao {
     ) : ChatEntity
 
     @Insert(onConflict = REPLACE)
-    suspend fun insertChat(chatEntity: ChatEntity)
-
+    suspend fun insertChat(chatEntity: ChatEntity) : Long
 
 }
