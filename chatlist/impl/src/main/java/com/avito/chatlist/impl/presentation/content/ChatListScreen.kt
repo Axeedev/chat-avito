@@ -208,12 +208,11 @@ private fun PaginationChatContent(
                     items(chats.itemCount, key = {it}) { index ->
                         chats[index]?.let { chat ->
                             ChatItem(chat){
-                                onChatClick(index)
+                                onChatClick(chat.id)
                             }
                         }
                     }
                     chats.apply {
-
                         when (loadState.append) {
                             is LoadState.Loading -> {
                                 item {

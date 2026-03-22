@@ -55,10 +55,8 @@ class ChatListStoreFactory @Inject constructor(
     }
 
 
-    private sealed interface Action {}
-
     private inner class ExecutorImpl :
-        CoroutineExecutor<ChatListIntent, Action, ChatListScreenState, Message, ChatListLabel>() {
+        CoroutineExecutor<ChatListIntent, Nothing, ChatListScreenState, Message, ChatListLabel>() {
         override fun executeIntent(intent: ChatListIntent) {
             when (intent) {
                 is ChatListIntent.ClickChat -> {
