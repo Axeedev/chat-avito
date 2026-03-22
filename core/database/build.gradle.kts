@@ -35,6 +35,8 @@ android {
 }
 
 dependencies {
+    api(libs.androidx.paging.runtime)
+    api(libs.androidx.room.paging)
     implementation(project(":core:common"))
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)

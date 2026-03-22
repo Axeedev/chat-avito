@@ -7,7 +7,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ChatListViewModel @Inject constructor(
-    storeFactory: ChatListStoreFactory
+    storeFactory: ChatListStoreFactory,
 ) : ViewModel() {
 
     internal val store = storeFactory.create()

@@ -1,5 +1,6 @@
 package com.avito.core.database.data
 
+import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy.Companion.REPLACE
@@ -14,7 +15,7 @@ interface ChatDao {
         SELECT * FROM chats
         ORDER BY updatedAt DESC
     """)
-    fun getChats(): Flow<List<ChatEntity>>
+    fun getChats(): PagingSource<Int, ChatEntity>
 
     @Query(
         """
@@ -23,7 +24,7 @@ interface ChatDao {
             ORDER BY updatedAt DESC
         """
     )
-    fun getChatsByTitle(title: String) : Flow<List<ChatEntity>>
+    fun getChatsByTitle(title: String) : PagingSource<Int, ChatEntity>
 
     @Query("""
         UPDATE chats
