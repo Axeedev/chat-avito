@@ -9,8 +9,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -63,6 +67,7 @@ fun ProfileScreen(
             }
         }
     }
+
     ProfileContent(
         screenState = state,
         onNameChange = {
@@ -158,16 +163,41 @@ internal fun ProfileContent(
             }
             item {
 
-                Text(
-                    text = "Your name"
-                )
-                Spacer(Modifier.size(16.dp))
+                Column {
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = "Your name"
+                        )
+                        Spacer(Modifier.weight(1f))
+                    }
+
+                    Spacer(Modifier.height(8.dp))
+
+                    AuthTextField(
+                        placeholderText = "Input name",
+                        value = state.name ?: "",
+                        isError = false,
+                        onValueChange = onNameChange
+                    )
+                }
+            }
+            item{
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = "Your email"
+                    )
+                    Spacer(Modifier.weight(1f))
+                }
+
+                Spacer(Modifier.height(8.dp))
+
                 AuthTextField(
-                    placeholderText = "Input name",
-                    value = state.name ?: "",
+                    placeholderText = "",
+                    value = state.email,
                     isError = false,
-                    onValueChange = onNameChange
+                    onValueChange = {}
                 )
+
             }
             item {
                 AppButton(

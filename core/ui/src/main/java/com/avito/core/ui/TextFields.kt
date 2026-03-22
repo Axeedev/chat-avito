@@ -67,6 +67,7 @@ fun AuthTextField(
     modifier: Modifier = Modifier,
     value: String,
     isError: Boolean,
+    enabled: Boolean = true,
     placeholderText: String,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     onValueChange: (String) -> Unit
@@ -77,6 +78,7 @@ fun AuthTextField(
             .border(1.dp, Color.Gray, RoundedCornerShape(12.dp)),
         value = value,
         singleLine = true,
+        enabled = enabled,
         onValueChange = onValueChange,
         placeholder = {
             Text(
