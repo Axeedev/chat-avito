@@ -33,7 +33,7 @@ class ProfileRepositoryImpl @Inject constructor(
         return combine(
             flow = userDataFlow(),
             flow2 = context.dataStore.data
-        ){userData, prefs ->
+        ){ userData, prefs ->
             UserData(
                 name = userData.name,
                 email = userData.email,

@@ -53,6 +53,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     api(libs.androidx.hilt.navigation.compose)
+    api(libs.androidx.hilt.navigation.compose)
     api(libs.mvikotlin)
     api(libs.mvikotlin.main)
     implementation(libs.mvikotlin.logging)

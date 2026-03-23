@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -89,7 +90,9 @@ fun LoginScreen(
         onAuthClick = {
             viewModel.store.accept(AuthIntent.ClickAuthButton(isLogin))
         },
-        onGoogleAuthClick = {},
+        onGoogleAuthClick = {
+            viewModel.store.accept(AuthIntent.GoogleSignIn)
+        },
         onSignupClick = onSignupClick,
         onBackClick = onBackClick,
         onInputEmail = {
@@ -153,152 +156,152 @@ internal fun AuthContent(
         }
     ) { paddingValues ->
 
-        Column(
+        LazyColumn(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
+                .fillMaxSize(),
+            contentPadding = paddingValues
         ) {
+            item {
 
-            Spacer(Modifier.weight(1f))
 
-            Column(
-                modifier = Modifier
-                    .weight(8f)
-                    .fillMaxSize()
-                    .padding(horizontal = 32.dp),
-            ) {
-                Text(
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    lineHeight = 34.sp,
-                    text = if (isLogin) "Login" else "Signup"
-                )
-
-                Spacer(Modifier.size(24.dp))
-
-                Text(
-                    text = "Email",
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 18.sp,
-                )
-
-                Spacer(Modifier.size(16.dp))
-
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    AuthTextField(
-                        value = state.email,
-                        placeholderText = "Input Email",
-                        isError = false,
-                        onValueChange = onInputEmail
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 32.dp),
+                ) {
+                    Text(
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        lineHeight = 34.sp,
+                        text = if (isLogin) "Login" else "Signup"
                     )
-                    if (state.isEmailError) {
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            text = "Invalid email",
-                            color = Color.Red
-                        )
-                    }
-                }
 
-                Spacer(Modifier.size(24.dp))
+                    Spacer(Modifier.size(24.dp))
 
-                Text(
-                    text = "Password",
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 18.sp,
-                )
-
-                Spacer(Modifier.size(16.dp))
-
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    AuthTextField(
-                        value = state.password,
-                        visualTransformation = PasswordVisualTransformation(),
-                        placeholderText = "Input password",
-                        isError = false,
-                        onValueChange = onInputPassword
+                    Text(
+                        text = "Email",
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 18.sp,
                     )
-                    if (state.isPasswordError) {
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            text = "Password must be at least 8 characters long",
-                            color = Color.Red
+
+                    Spacer(Modifier.size(16.dp))
+
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        AuthTextField(
+                            value = state.email,
+                            placeholderText = "Input Email",
+                            isError = false,
+                            onValueChange = onInputEmail
                         )
-                    }
-                }
-
-                Spacer(Modifier.size(24.dp))
-
-                AppButton(
-                    enabled = state.isAuthButtonEnabled,
-                    text = if (isLogin) "Login" else "Signup",
-                    content = {
-                        if (state.isAuthLoading) {
-                            Spacer(Modifier.width(16.dp))
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(20.dp),
+                        if (state.isEmailError) {
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                text = "Invalid email",
+                                color = Color.Red
                             )
                         }
                     }
-                ) {
-                    onAuthClick()
-                }
 
-                Spacer(Modifier.size(16.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-
-                    HorizontalDivider(
-                        Modifier.weight(1f),
-                    )
+                    Spacer(Modifier.size(24.dp))
 
                     Text(
-                        modifier = Modifier
-                            .padding(horizontal = 8.dp),
-                        text = "or",
+                        text = "Password",
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 18.sp,
                     )
 
-                    HorizontalDivider(
-                        Modifier.weight(1f),
-                    )
-                }
-
-                Spacer(Modifier.size(16.dp))
-
-                GoogleSignInButton(
-                    modifier = Modifier.fillMaxWidth(),
-                    onClick = onGoogleAuthClick
-                )
-
-                if (isLogin) {
-                    val interactionSource = remember { MutableInteractionSource() }
                     Spacer(Modifier.size(16.dp))
-                    Row(
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
+
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        AuthTextField(
+                            value = state.password,
+                            visualTransformation = PasswordVisualTransformation(),
+                            placeholderText = "Input password",
+                            isError = false,
+                            onValueChange = onInputPassword
+                        )
+                        if (state.isPasswordError) {
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                text = "Password must be at least 8 characters long",
+                                color = Color.Red
+                            )
+                        }
+                    }
+
+                    Spacer(Modifier.size(24.dp))
+
+                    AppButton(
+                        enabled = state.isAuthButtonEnabled,
+                        text = if (isLogin) "Login" else "Signup",
+                        content = {
+                            if (state.isAuthLoading) {
+                                Spacer(Modifier.width(16.dp))
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                )
+                            }
+                        }
                     ) {
-                        Text(
-                            text = "Don't have an account?",
-                            fontWeight = FontWeight.Medium,
+                        onAuthClick()
+                    }
+
+                    Spacer(Modifier.size(16.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+
+                        HorizontalDivider(
+                            Modifier.weight(1f),
                         )
-                        Spacer(
-                            Modifier
-                                .width(8.dp)
-                        )
+
                         Text(
                             modifier = Modifier
-                                .clickable(
-                                    indication = null,
-                                    interactionSource = interactionSource
-                                ) {
-                                    onSignupClick()
-                                },
-                            text = "Sign up",
-                            color = Color(0xFF10B981),
-                            fontWeight = FontWeight.SemiBold,
+                                .padding(horizontal = 8.dp),
+                            text = "or",
                         )
+
+                        HorizontalDivider(
+                            Modifier.weight(1f),
+                        )
+                    }
+
+                    Spacer(Modifier.size(16.dp))
+
+                    GoogleSignInButton(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = onGoogleAuthClick
+                    )
+
+                    if (isLogin) {
+                        val interactionSource = remember { MutableInteractionSource() }
+                        Spacer(Modifier.size(16.dp))
+                        Row(
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                        ) {
+                            Text(
+                                text = "Don't have an account?",
+                                fontWeight = FontWeight.Medium,
+                            )
+                            Spacer(
+                                Modifier
+                                    .width(8.dp)
+                            )
+                            Text(
+                                modifier = Modifier
+                                    .clickable(
+                                        indication = null,
+                                        interactionSource = interactionSource
+                                    ) {
+                                        onSignupClick()
+                                    },
+                                text = "Sign up",
+                                color = Color(0xFF10B981),
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                        }
                     }
                 }
             }

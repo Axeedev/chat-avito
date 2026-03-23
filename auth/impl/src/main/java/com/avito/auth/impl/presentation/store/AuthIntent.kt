@@ -8,4 +8,6 @@ internal sealed interface AuthIntent {
 
     data class ClickAuthButton(val isLogin : Boolean) : AuthIntent
 
+    data object GoogleSignIn : AuthIntent
+
 }

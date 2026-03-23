@@ -12,7 +12,20 @@
           "package_name": "com.avito.avitotestchat"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "862991539417-kbj9vlemtu4jnc40mf5jjeeh9vokruum.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.avito.avitotestchat",
+            "certificate_hash": "8a06b05715b08762b99754843af2981b07594b58"
+          }
+        },
+        {
+          "client_id": "862991539417-amhs0q50oabmleuno6np4rgm509uvpnk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCmhkTyzE9ts72TuEq6Ukii6w8cNHBbOKQ"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "862991539417-amhs0q50oabmleuno6np4rgm509uvpnk.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

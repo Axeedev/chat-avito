@@ -36,6 +36,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.googleid)
     implementation(libs.mvikotlin)
     implementation(libs.mvikotlin.main)
     implementation(libs.mvikotlin.logging)

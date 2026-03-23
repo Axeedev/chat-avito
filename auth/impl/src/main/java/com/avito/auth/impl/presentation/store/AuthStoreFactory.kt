@@ -4,8 +4,11 @@ import com.arkivanov.mvikotlin.core.store.Reducer
 import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
+import com.avito.auth.impl.domain.GoogleSignInUseCase
 import com.avito.auth.impl.domain.LogInUseCase
 import com.avito.auth.impl.domain.SignUpUseCase
+import com.avito.auth.impl.presentation.store.AuthLabel.*
+import com.avito.auth.impl.presentation.store.AuthStoreFactory.Message.*
 import com.avito.auth.impl.utils.AuthValidator
 import com.avito.core.common.CommonResult
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
@@ -17,7 +20,8 @@ import javax.inject.Inject
 class AuthStoreFactory @Inject constructor(
     private val storeFactory: StoreFactory,
     private val logInUseCase: LogInUseCase,
-    private val signUpUseCase: SignUpUseCase
+    private val signUpUseCase: SignUpUseCase,
+    private val googleSignInUseCase: GoogleSignInUseCase
 ) {
 
     internal fun create(): AuthStore = object : AuthStore, Store<AuthIntent, AuthScreenState, AuthLabel>
@@ -74,7 +78,7 @@ class AuthStoreFactory @Inject constructor(
                         when (result) {
                             is CommonResult.Failure -> {
                                 val messageError = getMessageFromErrorResult(result)
-                                publish(AuthLabel.ErrorAuth(messageError))
+                                publish(ErrorAuth(messageError))
                             }
 
                             CommonResult.Success -> {
@@ -86,11 +90,27 @@ class AuthStoreFactory @Inject constructor(
                 }
 
                 is AuthIntent.InputEmail -> {
-                    dispatch(Message.InputEmail(intent.email))
+                    dispatch(InputEmail(intent.email))
                 }
 
                 is AuthIntent.InputPassword -> {
-                    dispatch(Message.InputPassword(intent.password))
+                    dispatch(InputPassword(intent.password))
+                }
+
+                AuthIntent.GoogleSignIn -> {
+                    scope.launch {
+                        val result = googleSignInUseCase()
+                        when (result) {
+                            is CommonResult.Failure -> {
+                                val messageError = getMessageFromErrorResult(result)
+                                publish(ErrorAuth(messageError))
+                            }
+
+                            CommonResult.Success -> {
+                                publish(AuthLabel.SuccessAuth)
+                            }
+                        }
+                    }
                 }
             }
         }

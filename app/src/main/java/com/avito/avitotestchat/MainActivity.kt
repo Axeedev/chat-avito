@@ -42,12 +42,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
 
-            val viewModel: ProfileViewModel = hiltViewModel()
-
-            val state by viewModel.store.stateFlow.collectAsState()
 
             AvitoTestChatTheme(
-                darkTheme = state.isDarkTheme
             ){
                 AppRoot(
                     backStackStateFlow = navigationStateHolder.backStack,
@@ -91,7 +87,6 @@ class MainActivity : ComponentActivity() {
                     },
                     profileScreen = {
                         ProfileScreen(
-                            viewModel = viewModel,
                             onSignOut = {
                                 navigator.clear()
                             }

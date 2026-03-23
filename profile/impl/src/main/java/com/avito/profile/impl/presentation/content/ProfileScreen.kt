@@ -30,11 +30,15 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,6 +49,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil3.compose.AsyncImage
 import com.arkivanov.mvikotlin.extensions.coroutines.labels
 import com.arkivanov.mvikotlin.extensions.coroutines.stateFlow
@@ -52,7 +57,7 @@ import com.avito.core.ui.AppButton
 import com.avito.core.ui.AppSwitch
 import com.avito.core.ui.AuthTextField
 import com.avito.profile.impl.presentation.ProfileViewModel
-import com.avito.profile.impl.presentation.store.AuthLabel
+import com.avito.profile.impl.presentation.store.ProfileLabel
 import com.avito.profile.impl.presentation.store.ProfileIntent
 import com.avito.profile.impl.presentation.store.ProfileScreenState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -60,17 +65,23 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 @Composable
 fun ProfileScreen(
-    viewModel: ProfileViewModel,
+    viewModel: ProfileViewModel = hiltViewModel(),
     onSignOut: () -> Unit,
 ) {
 
     val state = viewModel.store.stateFlow.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
         viewModel.store.labels.collect {
             when (it) {
-                AuthLabel.SignOut -> {
+                ProfileLabel.SignOut -> {
                     onSignOut()
+                }
+
+                is ProfileLabel.Error -> {
+
+                    snackbarHostState.showSnackbar(it.message)
                 }
             }
         }
@@ -78,6 +89,7 @@ fun ProfileScreen(
 
     ProfileContent(
         screenState = state,
+        snackbarHostState = snackbarHostState,
         onNameChange = {
             viewModel.store.accept(ProfileIntent.UpdateNameField(it))
         },
@@ -100,6 +112,7 @@ fun ProfileScreen(
 @Composable
 internal fun ProfileContent(
     screenState: State<ProfileScreenState>,
+    snackbarHostState: SnackbarHostState,
     onNameChange: (String) -> Unit,
     onImageChange: (Uri) -> Unit,
     onSaveChangesClick: () -> Unit,
@@ -117,6 +130,11 @@ internal fun ProfileContent(
     }
 
     Scaffold(
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState){
+                Snackbar(it)
+            }
+        },
         topBar = {
             CenterAlignedTopAppBar(
                 title = {

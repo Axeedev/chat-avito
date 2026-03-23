@@ -8,4 +8,6 @@ interface AuthRepository {
 
     suspend fun logIn(email: String, password: String) : CommonResult
 
+    suspend fun signInWithGoogle() : CommonResult
+
 }

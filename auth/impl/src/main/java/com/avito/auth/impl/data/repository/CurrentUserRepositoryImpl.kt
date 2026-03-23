@@ -1,4 +1,4 @@
-package com.avito.auth.impl.repository
+package com.avito.auth.impl.data.repository
 
 import com.avito.auth.api.CurrentUserRepository
 import com.google.firebase.auth.FirebaseAuth

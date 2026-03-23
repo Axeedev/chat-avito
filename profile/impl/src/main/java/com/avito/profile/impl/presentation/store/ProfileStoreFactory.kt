@@ -24,7 +24,7 @@ class ProfileStoreFactory @Inject constructor(
     private val changeThemeUseCase: ChangeThemeUseCase
 ) {
 
-     fun create() : ProfileStore = object  : ProfileStore, Store<ProfileIntent, ProfileScreenState, AuthLabel>
+     fun create() : ProfileStore = object  : ProfileStore, Store<ProfileIntent, ProfileScreenState, ProfileLabel>
             by storeFactory.create(
         name = "ProfileStore",
         initialState = ProfileScreenState(),
@@ -52,9 +52,11 @@ class ProfileStoreFactory @Inject constructor(
 
         data object FinishLoading : Message
 
+        data object ClearState : Message
+
     }
 
-    private inner class ExecutorImpl : CoroutineExecutor<ProfileIntent, Action, ProfileScreenState, Message, AuthLabel>(){
+    private inner class ExecutorImpl : CoroutineExecutor<ProfileIntent, Action, ProfileScreenState, Message, ProfileLabel>(){
         override fun executeAction(action: Action) {
             when(action){
                 is Action.UserDataLoaded -> {
@@ -74,7 +76,9 @@ class ProfileStoreFactory @Inject constructor(
                         }
                         result?.let {result ->
                             when(result){
-                                is CommonResult.Failure -> {}
+                                is CommonResult.Failure -> {
+                                    publish(ProfileLabel.Error("Something went wrong. Check your internet connection"))
+                                }
                                 CommonResult.Success -> {}
                             }
                         }
@@ -82,7 +86,8 @@ class ProfileStoreFactory @Inject constructor(
                     }
                 }
                 ProfileIntent.SignOut -> {
-                    publish(AuthLabel.SignOut)
+                    dispatch(Message.ClearState)
+                    publish(ProfileLabel.SignOut)
                 }
                 is ProfileIntent.UpdateNameField -> {
                     dispatch(UpdateNameField(intent.newName))
@@ -106,7 +111,7 @@ class ProfileStoreFactory @Inject constructor(
     private object ReducerImpl: Reducer<ProfileScreenState, Message>{
         override fun ProfileScreenState.reduce(msg: Message): ProfileScreenState {
             return when(msg){
-                is Message.UpdateNameField -> {
+                is UpdateNameField -> {
                     copy(name = msg.newName, isSaveButtonEnabled = true)
                 }
                 is Message.UpdateProfileImage -> {
@@ -126,6 +131,10 @@ class ProfileStoreFactory @Inject constructor(
                 }
                 Message.StartLoading -> {
                     copy(isSavingLoading = true)
+                }
+
+                Message.ClearState -> {
+                    ProfileScreenState()
                 }
             }
         }
