@@ -24,7 +24,7 @@ class ProfileRepositoryImpl @Inject constructor(
     @param:ApplicationContext private val context: Context
 ) : ProfileRepository, ProfileApiRepository {
 
-    private val user = firebaseAuth.currentUser
+    private val user get() = firebaseAuth.currentUser
 
     private val imagePreferencesKey = stringPreferencesKey("images")
     private val themePreferencesKey = booleanPreferencesKey("theme")

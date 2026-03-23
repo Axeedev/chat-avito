@@ -52,7 +52,6 @@ class ProfileStoreFactory @Inject constructor(
 
         data object FinishLoading : Message
 
-        data object ClearState : Message
 
     }
 
@@ -86,7 +85,6 @@ class ProfileStoreFactory @Inject constructor(
                     }
                 }
                 ProfileIntent.SignOut -> {
-                    dispatch(Message.ClearState)
                     publish(ProfileLabel.SignOut)
                 }
                 is ProfileIntent.UpdateNameField -> {
@@ -133,9 +131,6 @@ class ProfileStoreFactory @Inject constructor(
                     copy(isSavingLoading = true)
                 }
 
-                Message.ClearState -> {
-                    ProfileScreenState()
-                }
             }
         }
     }
