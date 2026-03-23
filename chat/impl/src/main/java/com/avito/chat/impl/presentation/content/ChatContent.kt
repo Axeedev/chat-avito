@@ -4,7 +4,10 @@ package com.avito.chat.impl.presentation.content
 
 import android.content.Context
 import android.content.Intent
+import android.util.Log
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -29,6 +32,7 @@ import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
@@ -49,6 +53,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -84,6 +89,7 @@ fun ChatContent(
                     onBackClick()
                 }
                 ChatLabel.NetworkError -> {
+                    Log.d("insertMessage", "network error")
                     snackbarState.showSnackbar("An error has occurred. Try again by taping on your message")
                 }
             }
@@ -359,12 +365,19 @@ fun InputField(
     onClear: () -> Unit
 ) {
 
-    val tintColor = if (isInputFieldButtonsEnabled) Color.Black else Color.Gray.copy(alpha = 0.4f)
+    val tintColor = if (isInputFieldButtonsEnabled) MaterialTheme.colorScheme.onBackground else Color.Gray.copy(alpha = 0.4f)
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(Color.White)
-            .padding(8.dp),
+            .background(Color.Transparent)
+            .padding(8.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .border(
+                shape = RoundedCornerShape(12.dp),
+                color = Color.Gray.copy(0.2f),
+                width = 1.dp
+
+            ),
         verticalAlignment = Alignment.CenterVertically
     ) {
 
@@ -372,7 +385,7 @@ fun InputField(
             modifier = Modifier
                 .weight(1f)
                 .clip(RoundedCornerShape(24.dp))
-                .padding(horizontal = 12.dp)
+                .padding(all = 12.dp)
         ) {
             BasicTextField(
                 value = text,
@@ -380,7 +393,10 @@ fun InputField(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 10.dp),
-                maxLines = 20,
+                textStyle = TextStyle(
+                    color = MaterialTheme.colorScheme.onBackground
+                ),
+                maxLines = 100,
                 decorationBox = { inner ->
                     if (text.isEmpty()) {
                         Text("Сообщение", color = Color.Gray)

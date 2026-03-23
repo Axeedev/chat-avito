@@ -5,6 +5,7 @@ package com.avito.profile.impl.presentation.content
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -20,10 +21,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,14 +39,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.arkivanov.mvikotlin.extensions.coroutines.labels
 import com.arkivanov.mvikotlin.extensions.coroutines.stateFlow
 import com.avito.core.ui.AppButton
+import com.avito.core.ui.AppSwitch
 import com.avito.core.ui.AuthTextField
 import com.avito.profile.impl.presentation.ProfileViewModel
 import com.avito.profile.impl.presentation.store.AuthLabel
@@ -52,8 +60,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 @Composable
 fun ProfileScreen(
-    viewModel: ProfileViewModel = hiltViewModel(),
-    onSignOut: () -> Unit
+    viewModel: ProfileViewModel,
+    onSignOut: () -> Unit,
 ) {
 
     val state = viewModel.store.stateFlow.collectAsState()
@@ -79,9 +87,12 @@ fun ProfileScreen(
         onSignOut = {
             viewModel.store.accept(ProfileIntent.SignOut)
         },
+        onChangeTheme = {
+            viewModel.store.accept(ProfileIntent.ChangeTheme(it))
+        },
         onSaveChangesClick = {
             viewModel.store.accept(ProfileIntent.ClickUpdateName)
-        }
+        },
     )
 }
 
@@ -92,7 +103,8 @@ internal fun ProfileContent(
     onNameChange: (String) -> Unit,
     onImageChange: (Uri) -> Unit,
     onSaveChangesClick: () -> Unit,
-    onSignOut: () -> Unit
+    onChangeTheme: (Boolean) -> Unit,
+    onSignOut: () -> Unit,
 ) {
     val state = screenState.value
 
@@ -200,6 +212,22 @@ internal fun ProfileContent(
 
             }
             item {
+
+                ProfileField(
+                    mainText = "Dark theme",
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+
+                    AppSwitch(
+                        checked = state.isDarkTheme
+                    ) {
+                        onChangeTheme(it)
+                    }
+
+                }
+
+            }
+            item {
                 AppButton(
                     enabled = true,
                     text = "Sign out",
@@ -222,6 +250,54 @@ internal fun ProfileContent(
                     }
                 )
             }
+        }
+    }
+}
+
+
+
+@Composable
+fun ProfileField(
+    modifier: Modifier = Modifier,
+    mainText: String,
+    shape: Shape,
+    secondaryText: String = "",
+    secondaryContent: @Composable () -> Unit,
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(shape),
+        shape = shape,
+        colors = CardDefaults.cardColors(
+            containerColor = Color.Transparent,
+        ),
+        border = BorderStroke(1.dp, Color.Gray.copy(alpha = 0.2f))
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column {
+                Text(
+                    text = mainText,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 18.sp,
+                )
+                if (secondaryText.isNotEmpty()) {
+                    Spacer(Modifier.size(8.dp))
+                    Text(
+                        text = secondaryText,
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+            secondaryContent()
+
         }
     }
 }

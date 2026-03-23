@@ -28,7 +28,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-class ChatStoreFactory @Inject constructor(
+class  ChatStoreFactory @Inject constructor(
     private val storeFactory: StoreFactory,
     private val insertMessageUseCase: InsertMessageUseCase,
     private val getMessagesUseCase: GetMessagesUseCase,
@@ -98,9 +98,7 @@ class ChatStoreFactory @Inject constructor(
 
                 MessageSent -> {
                     when (this) {
-                        is ChatScreenState.ChatScreenInitial -> {
-                            this
-                        }
+                        is ChatScreenState.ChatScreenInitial -> { this }
 
                         is ChatScreenState.ChatScreenStateLoaded -> {
                             copy(messageField = "", isResponsePending = true)
@@ -122,9 +120,7 @@ class ChatStoreFactory @Inject constructor(
 
                 ChatStoreMessage.ReceiveAnswer -> {
                     when (this) {
-                        is ChatScreenState.ChatScreenInitial -> {
-                            this
-                        }
+                        is ChatScreenState.ChatScreenInitial -> { this }
 
                         is ChatScreenState.ChatScreenStateLoaded -> {
                             copy(isResponsePending = false)
@@ -221,7 +217,7 @@ class ChatStoreFactory @Inject constructor(
                 is ChatIntent.RetryMessage -> {
                     scope.launch {
                         chatIdFlow.value?.let { id ->
-                            insertMessageUseCase(
+                            val result = insertMessageUseCase(
                                 Message(
                                     id = intent.messageId,
                                     content = intent.content,
@@ -231,11 +227,20 @@ class ChatStoreFactory @Inject constructor(
                                 ),
                                 chatId = id
                             )
+                            when(result){
+                            is CommonResult.Failure -> {
+                                publish(ChatLabel.NetworkError)
+                            }
+                            CommonResult.Success -> {
+                                dispatch(ChatStoreMessage.ReceiveAnswer)
+                            }
+                        }
                         }
                     }
                 }
             }
         }
+
     }
 
 
@@ -262,6 +267,5 @@ class ChatStoreFactory @Inject constructor(
         data class ChatTitleLoaded(val title: String) : Action
 
     }
-
 
 }

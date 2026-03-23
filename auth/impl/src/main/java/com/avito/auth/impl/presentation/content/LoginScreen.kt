@@ -328,7 +328,7 @@ fun GoogleSignInButton(
         Spacer(Modifier.size(16.dp))
         Text(
             text = "Sign in with Google",
-            color = Color.Black
+            color = MaterialTheme.colorScheme.onBackground
         )
     }
 }

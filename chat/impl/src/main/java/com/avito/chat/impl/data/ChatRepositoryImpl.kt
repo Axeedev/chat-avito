@@ -97,6 +97,7 @@ class ChatRepositoryImpl @Inject constructor(
 
         } catch (e: Exception) {
 
+            Log.d("insertMessage", "${message.content}")
             updateMessageStatus(messageId.toInt(), MessageStatus.ERROR)
 
             CommonResult.Failure(e)

@@ -11,4 +11,6 @@ interface ProfileRepository {
 
     suspend fun updateAvatar(uri: String): CommonResult
 
+    suspend fun changeTheme(isDark: Boolean)
+
 }

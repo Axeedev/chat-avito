@@ -6,6 +6,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -42,4 +44,22 @@ fun AppButton(
         )
         content()
     }
+}
+@Composable
+fun AppSwitch(
+    modifier: Modifier = Modifier,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Switch(
+        modifier = modifier,
+        colors = SwitchDefaults.colors(
+            uncheckedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            uncheckedIconColor = MaterialTheme.colorScheme.onPrimary,
+            checkedTrackColor = MaterialTheme.colorScheme.tertiary,
+            checkedThumbColor = MaterialTheme.colorScheme.onTertiaryFixedVariant
+        ),
+        checked = checked,
+        onCheckedChange = onCheckedChange
+    )
 }

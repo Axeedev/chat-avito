@@ -2,6 +2,7 @@ package com.avito.profile.impl.data
 
 import android.content.Context
 import androidx.core.net.toUri
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.avito.core.common.CommonResult
@@ -26,6 +27,7 @@ class ProfileRepositoryImpl @Inject constructor(
     private val user = firebaseAuth.currentUser
 
     private val imagePreferencesKey = stringPreferencesKey("images")
+    private val themePreferencesKey = booleanPreferencesKey("theme")
 
     override fun getUserData(): Flow<UserData> {
         return combine(
@@ -35,8 +37,15 @@ class ProfileRepositoryImpl @Inject constructor(
             UserData(
                 name = userData.name,
                 email = userData.email,
-                photoUri = prefs[imagePreferencesKey]
+                photoUri = prefs[imagePreferencesKey],
+                isDarkTheme = prefs[themePreferencesKey] ?: false
             )
+        }
+    }
+
+    override suspend fun changeTheme(isDark: Boolean) {
+        context.dataStore.edit { mutablePreferences ->
+            mutablePreferences[themePreferencesKey] = isDark
         }
     }
 
@@ -46,12 +55,13 @@ class ProfileRepositoryImpl @Inject constructor(
 
     private fun userDataFlow() = flow {
         user?.let { firebaseUser ->
-            firebaseUser.email?.let {email ->
+            firebaseUser.email?.let { email ->
                 emit(
                     UserData(
                         name = firebaseUser.displayName,
                         email = email,
-                        photoUri = ""
+                        photoUri = "",
+                        isDarkTheme = false
                     )
                 )
             }
@@ -93,6 +103,10 @@ class ProfileRepositoryImpl @Inject constructor(
 
     private suspend fun updatePhoto(uri: String){
         context.dataStore.edit { mutablePreferences ->
+            val previousImage = mutablePreferences[imagePreferencesKey]
+            previousImage?.let { path ->
+                internalStorageManager.deleteImageFromInternal(path)
+            }
             mutablePreferences[imagePreferencesKey] = uri
         }
     }

@@ -8,9 +8,11 @@ import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineBootstrapper
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
 import com.avito.core.common.CommonResult
 import com.avito.profile.impl.domain.UserData
+import com.avito.profile.impl.domain.usecases.ChangeThemeUseCase
 import com.avito.profile.impl.domain.usecases.GetUserDataUseCase
 import com.avito.profile.impl.domain.usecases.UpdateNameUseCase
 import com.avito.profile.impl.domain.usecases.UpdatePhotoUseCase
+import com.avito.profile.impl.presentation.store.ProfileStoreFactory.Message.UpdateNameField
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -18,10 +20,11 @@ class ProfileStoreFactory @Inject constructor(
     private val storeFactory: StoreFactory,
     private val updateNameUseCase: UpdateNameUseCase,
     private val updatePhotoUseCase: UpdatePhotoUseCase,
-    private val getUserDataUseCase: GetUserDataUseCase
+    private val getUserDataUseCase: GetUserDataUseCase,
+    private val changeThemeUseCase: ChangeThemeUseCase
 ) {
 
-    internal fun create() : ProfileStore = object  : ProfileStore, Store<ProfileIntent, ProfileScreenState, AuthLabel>
+     fun create() : ProfileStore = object  : ProfileStore, Store<ProfileIntent, ProfileScreenState, AuthLabel>
             by storeFactory.create(
         name = "ProfileStore",
         initialState = ProfileScreenState(),
@@ -31,13 +34,13 @@ class ProfileStoreFactory @Inject constructor(
     ){}
 
 
-    sealed interface Action{
+    private sealed interface Action{
 
         data class UserDataLoaded(val userData: UserData) : Action
 
     }
 
-    sealed interface Message{
+    private sealed interface Message{
 
         data class UpdateNameField(val newName: String) : Message
 
@@ -82,11 +85,17 @@ class ProfileStoreFactory @Inject constructor(
                     publish(AuthLabel.SignOut)
                 }
                 is ProfileIntent.UpdateNameField -> {
-                    dispatch(Message.UpdateNameField(intent.newName))
+                    dispatch(UpdateNameField(intent.newName))
                 }
                 is ProfileIntent.UpdateProfileImage -> {
                     scope.launch {
                         updatePhotoUseCase(intent.imageUri.toString())
+                    }
+                }
+
+                is ProfileIntent.ChangeTheme -> {
+                    scope.launch {
+                        changeThemeUseCase(isDark = intent.isDark)
                     }
                 }
             }
@@ -107,7 +116,8 @@ class ProfileStoreFactory @Inject constructor(
                     copy(
                         name = msg.userData.name,
                         profileImageUri = msg.userData.photoUri?.toUri(),
-                        email = msg.userData.email
+                        email = msg.userData.email,
+                        isDarkTheme = msg.userData.isDarkTheme
                     )
                 }
 

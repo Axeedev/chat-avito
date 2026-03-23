@@ -10,5 +10,5 @@ class ProfileViewModel @Inject constructor(
     storeFactory: ProfileStoreFactory
 ) : ViewModel() {
 
-    internal val store = storeFactory.create()
+    val store = storeFactory.create()
 }

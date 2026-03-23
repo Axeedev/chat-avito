@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -25,6 +26,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -307,24 +309,32 @@ private fun SearchBarWithButton(
     Row(
         modifier = Modifier
             .fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         AppTextField(
+            modifier = Modifier
+                .weight(4f),
             placeholderText = "Enter chat title...",
             leadingIconId = R.drawable.ic_search,
             value = fieldValue,
             onValueChange = onValueChange
         )
-        Spacer(Modifier.size(16.dp))
+        Spacer(Modifier.size(8.dp))
         Button(
-            modifier = Modifier,
+            modifier = Modifier
+                .fillMaxSize()
+                .sizeIn(minHeight = 60.dp, minWidth = 40.dp)
+                .weight(1f),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF3B82F6)
+                containerColor = Color(0xFF3B82F6),
+                contentColor = Color.White
             ),
             shape = RoundedCornerShape(12.dp),
             onClick = onSearchClick
         ) {
             Icon(
+                modifier = Modifier
+                    .size(24.dp),
                 painter = painterResource(R.drawable.ic_search),
                 contentDescription = "search button"
             )
@@ -346,7 +356,7 @@ private fun ChatItem(
             },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = MaterialTheme.colorScheme.onPrimary
         )
     ) {
         Row(

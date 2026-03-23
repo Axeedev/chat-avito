@@ -42,7 +42,7 @@ fun AppTextField(
             unfocusedIndicatorColor = Color.Transparent,
         ),
         textStyle = TextStyle(
-            color = Color.Black
+            color = MaterialTheme.colorScheme.onBackground
         ),
         placeholder = {
             Text(
