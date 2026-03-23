@@ -5,6 +5,7 @@ import androidx.room.ForeignKey
 import androidx.room.ForeignKey.Companion.CASCADE
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.avito.core.common.MessageStatus
 import com.avito.core.common.Role
 
 
@@ -26,5 +27,6 @@ data class MessageEntity(
     val chatId: Int,
     val content: String,
     val role: Role,
-    val createdAt: Long
+    val createdAt: Long,
+    val status: MessageStatus
 )

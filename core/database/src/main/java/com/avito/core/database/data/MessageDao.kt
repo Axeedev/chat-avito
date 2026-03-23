@@ -4,19 +4,29 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy.Companion.REPLACE
 import androidx.room.Query
+import com.avito.core.common.MessageStatus
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface MessageDao {
 
-    @Query("""
+    @Query(
+        """
         SELECT * FROM messages
         WHERE chatId = :chatId
         ORDER by createdAt DESC
-    """)
-    fun getMessagesByChatId(chatId: Int) : Flow<List<MessageEntity>>
+    """
+    )
+    fun getMessagesByChatId(chatId: Int): Flow<List<MessageEntity>>
 
     @Insert(onConflict = REPLACE)
-    suspend fun insertMessage(messageEntity: MessageEntity)
+    suspend fun insertMessage(messageEntity: MessageEntity) : Long
+
+    @Query(
+        """
+       UPDATE messages SET status = :status WHERE id = :messageId 
+    """
+    )
+    suspend fun updateMessageStatus(messageId: Int, status: MessageStatus)
 
 }

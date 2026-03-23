@@ -30,6 +30,9 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -57,6 +60,7 @@ import com.avito.chat.impl.presentation.store.ChatIntent
 import com.avito.chat.impl.presentation.store.ChatLabel
 import com.avito.chat.impl.presentation.store.ChatScreenState
 import com.avito.core.common.Message
+import com.avito.core.common.MessageStatus
 import com.avito.core.common.Role
 import com.avito.core.ui.R
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -72,11 +76,15 @@ fun ChatContent(
     val store = viewModel.createStore(chatId)
     val state = store.stateFlow.collectAsState()
 
+    val snackbarState = remember { SnackbarHostState() }
     LaunchedEffect(Unit) {
         store.labels.collect {
             when (it) {
                 ChatLabel.ClickBack -> {
                     onBackClick()
+                }
+                ChatLabel.NetworkError -> {
+                    snackbarState.showSnackbar("An error has occurred. Try again by taping on your message")
                 }
             }
         }
@@ -84,6 +92,7 @@ fun ChatContent(
 
     ChatContent(
         state = state,
+        snackbarHostState = snackbarState,
         onFieldValueChange = {
             store.accept(ChatIntent.InputMessage(it))
         },
@@ -93,6 +102,9 @@ fun ChatContent(
         onBackClick = onBackClick,
         onSend = {
             store.accept(ChatIntent.SendMessage)
+        },
+        onRetry = {id, message ->
+            store.accept(ChatIntent.RetryMessage(id, message))
         }
     )
 
@@ -101,14 +113,25 @@ fun ChatContent(
 @Composable
 private fun ChatContent(
     state: State<ChatScreenState>,
+    snackbarHostState: SnackbarHostState,
     onFieldValueChange: (String) -> Unit,
     onClearFieldClick: () -> Unit,
     onSend: () -> Unit,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onRetry: (Int, String) -> Unit
 ) {
     val currentState = state.value
     val context = LocalContext.current
     Scaffold(
+        snackbarHost = {
+            SnackbarHost(
+                hostState = snackbarHostState
+            ){
+                Snackbar(
+                    snackbarData = it
+                )
+            }
+        },
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
@@ -194,7 +217,9 @@ private fun ChatContent(
                                 MessageItem(
                                     message = message,
                                     context = context
-                                )
+                                ){
+                                    onRetry(message.id, message.content)
+                                }
                             }
                         }
                     } else {
@@ -242,6 +267,7 @@ fun MessageItem(
     modifier: Modifier = Modifier,
     message: Message,
     context: Context,
+    onRetry: () -> Unit
 ) {
     val isUser = message.role == Role.USER
 
@@ -260,18 +286,25 @@ fun MessageItem(
                         bottomStart = if (isUser) 16.dp else 4.dp,
                         bottomEnd = if (isUser) 4.dp else 16.dp
                     )
-                ).combinedClickable(
+                )
+                .combinedClickable(
                     onLongClick = {
-                        val intent = Intent(Intent.ACTION_SEND).apply {
-                            type = "text/plain"
-                            putExtra(
-                                Intent.EXTRA_TEXT,
-                                "Look at the message from my AI assistant: ${message.content}"
-                            )
+                        if (!isUser) {
+                            val intent = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(
+                                    Intent.EXTRA_TEXT,
+                                    "Look at the message from my AI assistant: ${message.content}"
+                                )
+                            }
+                            context.startActivity(intent)
                         }
-                        context.startActivity(intent)
                     },
-                    onClick = {}
+                    onClick = {
+                        if (message.status == MessageStatus.ERROR) {
+                            onRetry()
+                        }
+                    }
                 )
                 .background(
                     if (isUser) Color(0xFF4CAF50) else Color.White
@@ -285,8 +318,31 @@ fun MessageItem(
                     color = if (isUser) Color.White else Color.Black,
                     fontSize = 16.sp
                 )
-
                 Spacer(modifier = Modifier.height(4.dp))
+                if (message.role == Role.USER){
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                    ) {
+                        Spacer(Modifier.weight(1f))
+                        val iconId = when(message.status){
+                            MessageStatus.SENDING -> {
+                                com.avito.chat.impl.R.drawable.ic_sending
+                            }
+                            MessageStatus.SENT -> {
+                                com.avito.chat.impl.R.drawable.ic_done
+                            }
+                            MessageStatus.ERROR -> {
+                                com.avito.chat.impl.R.drawable.ic_error
+                            }
+                        }
+                        Icon(
+                            modifier = Modifier.size(16.dp),
+                            painter = painterResource(iconId),
+                            contentDescription = "message status",
+                        )
+                    }
+                }
 
             }
         }

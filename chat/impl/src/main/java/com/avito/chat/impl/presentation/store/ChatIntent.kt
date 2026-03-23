@@ -8,6 +8,8 @@ internal sealed interface ChatIntent {
 
     data object SendMessage : ChatIntent
 
+    data class RetryMessage(val messageId: Int, val content: String) : ChatIntent
+
     data object ClearMessage : ChatIntent
 
 }

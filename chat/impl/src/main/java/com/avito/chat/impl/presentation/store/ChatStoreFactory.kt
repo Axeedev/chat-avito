@@ -2,8 +2,6 @@
 
 package com.avito.chat.impl.presentation.store
 
-import android.content.Context
-import android.util.Log
 import com.arkivanov.mvikotlin.core.store.Reducer
 import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
@@ -18,9 +16,10 @@ import com.avito.chat.impl.presentation.store.ChatStoreFactory.ChatStoreMessage.
 import com.avito.chat.impl.presentation.store.ChatStoreFactory.ChatStoreMessage.MessageSent
 import com.avito.chat.impl.presentation.store.ChatStoreFactory.ChatStoreMessage.MessagesLoaded
 import com.avito.chatlist.api.ChatListRepository
+import com.avito.core.common.CommonResult
 import com.avito.core.common.Message
+import com.avito.core.common.MessageStatus
 import com.avito.core.common.Role
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterNotNull
@@ -35,7 +34,6 @@ class ChatStoreFactory @Inject constructor(
     private val getMessagesUseCase: GetMessagesUseCase,
     private val createChatUseCase: CreateChatUseCase,
     private val chatListRepository: ChatListRepository,
-    @param:ApplicationContext private val context: Context
 
 ) {
     private val chatIdFlow: MutableStateFlow<Int?> = MutableStateFlow(null)
@@ -133,6 +131,7 @@ class ChatStoreFactory @Inject constructor(
                         }
                     }
                 }
+
             }
         }
     }
@@ -197,16 +196,41 @@ class ChatStoreFactory @Inject constructor(
                             val chatId = currentChatId ?: createChatUseCase("New chat").toInt()
                             chatIdFlow.value = chatId
                             dispatch(MessageSent)
-                            insertMessageUseCase(
+                            val result = insertMessageUseCase(
                                 Message(
                                     id = 0,
                                     content = message,
                                     role = Role.USER,
-                                    createdAt = System.currentTimeMillis()
+                                    createdAt = System.currentTimeMillis(),
+                                    status = MessageStatus.SENDING
                                 ),
                                 chatId
                             )
-                            dispatch(ChatStoreMessage.ReceiveAnswer)
+                            when(result){
+                                is CommonResult.Failure -> {
+                                    publish(ChatLabel.NetworkError)
+                                }
+                                CommonResult.Success -> {
+                                    dispatch(ChatStoreMessage.ReceiveAnswer)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                is ChatIntent.RetryMessage -> {
+                    scope.launch {
+                        chatIdFlow.value?.let { id ->
+                            insertMessageUseCase(
+                                Message(
+                                    id = intent.messageId,
+                                    content = intent.content,
+                                    role = Role.USER,
+                                    createdAt = System.currentTimeMillis(),
+                                    status = MessageStatus.SENDING
+                                ),
+                                chatId = id
+                            )
                         }
                     }
                 }
@@ -228,7 +252,6 @@ class ChatStoreFactory @Inject constructor(
         data object MessageSent : ChatStoreMessage
 
         data object ReceiveAnswer : ChatStoreMessage
-
 
     }
 

@@ -101,37 +101,47 @@ fun ChatListScreen(
 }
 
 @Composable
-private fun FullScreenLoader(){
+private fun FullScreenLoader() {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
-    ){
+    ) {
         CircularProgressIndicator(color = Color.Gray)
     }
 }
 
 @Composable
-private fun EmptyState(){
+private fun EmptyState() {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
-    ){
-        Icon(
-            painter = painterResource(R.drawable.ic_not_found),
-            contentDescription = "not found"
-        )
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Icon(
+                modifier = Modifier.size(50.dp),
+                painter = painterResource(R.drawable.ic_not_found),
+                contentDescription = "not found"
+            )
+            Spacer(Modifier.size(16.dp))
+            Text(
+                text = "No chats yet",
+                color = Color.Gray
+            )
+        }
     }
 }
 
 @Composable
 fun ErrorScreen(
-    message : String?,
+    message: String?,
     onRetry: () -> Unit
-){
+) {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
-    ){
+    ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
@@ -159,6 +169,7 @@ fun ErrorScreen(
         }
     }
 }
+
 @Composable
 private fun PaginationChatContent(
     state: State<ChatListScreenState>,
@@ -167,7 +178,7 @@ private fun PaginationChatContent(
     onChatClick: (Int) -> Unit,
     onFindChatClick: () -> Unit,
     onSearchValueChange: (String) -> Unit
-){
+) {
 
 
     val chats = chatsFlow.collectAsLazyPagingItems()
@@ -205,9 +216,9 @@ private fun PaginationChatContent(
                             onSearchClick = onFindChatClick,
                         )
                     }
-                    items(chats.itemCount, key = {it}) { index ->
+                    items(chats.itemCount, key = { it }) { index ->
                         chats[index]?.let { chat ->
-                            ChatItem(chat){
+                            ChatItem(chat) {
                                 onChatClick(chat.id)
                             }
                         }

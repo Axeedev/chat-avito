@@ -7,6 +7,6 @@ class InsertMessageUseCase @Inject constructor(
     private val repository: ChatRepository
 ) {
 
-    suspend operator fun invoke(message: Message, chatId: Int) = repository.insertMessage(message, chatId)
+    suspend operator fun invoke(message: Message, chatId: Int)= repository.insertMessage(message, chatId)
 
 }

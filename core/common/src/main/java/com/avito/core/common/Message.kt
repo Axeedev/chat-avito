@@ -5,5 +5,5 @@ data class Message(
     val content: String,
     val role: Role,
     val createdAt: Long,
-    val isPending: Boolean = false
+    val status: MessageStatus
 )

@@ -6,7 +6,9 @@ import com.avito.chat.impl.data.remote.Models
 import com.avito.chat.impl.data.remote.dtos.ChatRequestDto
 import com.avito.chat.impl.data.remote.dtos.MessageDto
 import com.avito.chat.impl.domain.ChatRepository
+import com.avito.core.common.CommonResult
 import com.avito.core.common.Message
+import com.avito.core.common.MessageStatus
 import com.avito.core.common.Role
 import com.avito.core.database.data.ChatDao
 import com.avito.core.database.data.ChatEntity
@@ -32,58 +34,83 @@ class ChatRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun insertMessage(message: Message, chatId: Int) {
-        messageDao.insertMessage(
+    override suspend fun insertMessage(message: Message, chatId: Int): CommonResult {
+        val messageId = messageDao.insertMessage(
             messageEntity = message.toMessageEntity(chatId)
         )
+        return try {
 
-        val token = tokenRepository.getValidAccessToken()
 
-        val messages = listOf(
-            MessageDto(
-                role = "user",
-                content = message.content
-            )
-        )
+            val token = tokenRepository.getValidAccessToken()
 
-        val chatResponse = chatApiService.getAssistantResponse(
-            authorization = "Bearer $token",
-            chatRequest = ChatRequestDto(
-                model = Models.GIGACHAT_BASIC,
-                messages = messages
-            )
-        )
-
-        if (!chatResponse.isSuccessful || chatResponse.body() == null) {
-            Log.d("ChatRepositoryImpl","Ошибка распознавания: ${chatResponse.message()}")
-        }
-        val chatResult = chatResponse.body() ?: throw Exception("Ошибка распознавания: ${chatResponse.message()}")
-        chatResult.choices.forEach {choiceDto ->
-
-            val message = choiceDto.message
-            messageDao.insertMessage(
-                messageEntity = MessageEntity(
-                    id = 0,
-                    chatId = chatId,
-                    content = message.content,
-                    role = Role.MODEL,
-                    createdAt = System.currentTimeMillis()
+            val messages = listOf(
+                MessageDto(
+                    role = "user",
+                    content = message.content
                 )
             )
-        }
-        val chat = chatDao.getChatById(chatId)
-        if (chat.updatedAt == null){
-            chatDao.updateChatTitle(
-                chatId = chatId,
-                updatedAt = System.currentTimeMillis(),
-                newTitle = message.content
+
+            updateMessageStatus(messageId.toInt(), MessageStatus.SENT)
+            val chatResponse = chatApiService.getAssistantResponse(
+                authorization = "Bearer $token",
+                chatRequest = ChatRequestDto(
+                    model = Models.GIGACHAT_BASIC,
+                    messages = messages
+                )
             )
-        }else{
-            chatDao.updateChat(chatId = chatId, updatedAt = System.currentTimeMillis())
+
+            if (!chatResponse.isSuccessful || chatResponse.body() == null) {
+                Log.d("ChatRepositoryImpl", "Ошибка распознавания: ${chatResponse.message()}")
+            }
+            val chatResult = chatResponse.body()
+                ?: throw Exception("Ошибка распознавания: ${chatResponse.message()}")
+
+            chatResult.choices.forEach { choiceDto ->
+
+                val message = choiceDto.message
+                messageDao.insertMessage(
+                    messageEntity = MessageEntity(
+                        id = 0,
+                        chatId = chatId,
+                        content = message.content,
+                        role = Role.MODEL,
+                        createdAt = System.currentTimeMillis(),
+                        status = MessageStatus.SENDING
+                    )
+                )
+            }
+
+            val chat = chatDao.getChatById(chatId)
+
+            if (chat.updatedAt == null) {
+                chatDao.updateChatTitle(
+                    chatId = chatId,
+                    updatedAt = System.currentTimeMillis(),
+                    newTitle = message.content
+                )
+            } else {
+                chatDao.updateChat(chatId = chatId, updatedAt = System.currentTimeMillis())
+            }
+
+
+            CommonResult.Success
+
+        } catch (e: Exception) {
+
+            updateMessageStatus(messageId.toInt(), MessageStatus.ERROR)
+
+            CommonResult.Failure(e)
         }
     }
 
-    override suspend fun createChat(title: String) : Long{
+    override suspend fun updateMessageStatus(
+        id: Int,
+        status: MessageStatus
+    ) {
+        messageDao.updateMessageStatus(id, status)
+    }
+
+    override suspend fun createChat(title: String): Long {
         val chat = ChatEntity(
             title = title,
             createdAt = System.currentTimeMillis()
