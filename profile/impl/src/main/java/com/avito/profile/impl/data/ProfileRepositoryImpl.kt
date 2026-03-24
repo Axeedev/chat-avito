@@ -102,12 +102,17 @@ class ProfileRepositoryImpl @Inject constructor(
     }
 
     private suspend fun updatePhoto(uri: String){
-        context.dataStore.edit { mutablePreferences ->
-            val previousImage = mutablePreferences[imagePreferencesKey]
-            previousImage?.let { path ->
-                internalStorageManager.deleteImageFromInternal(path)
+        try {
+            context.dataStore.edit { mutablePreferences ->
+                val previousImage = mutablePreferences[imagePreferencesKey]
+                previousImage?.let { path ->
+                    internalStorageManager.deleteImageFromInternal(path)
+                }
+                mutablePreferences[imagePreferencesKey] = uri
             }
-            mutablePreferences[imagePreferencesKey] = uri
+        }catch (e : Exception){
+            e.printStackTrace()
         }
+
     }
 }

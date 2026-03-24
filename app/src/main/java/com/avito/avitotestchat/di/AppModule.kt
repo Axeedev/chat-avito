@@ -1,6 +1,5 @@
 package com.avito.avitotestchat.di
 
-import com.arkivanov.mvikotlin.core.store.StoreFactory
 import com.arkivanov.mvikotlin.main.store.DefaultStoreFactory
 import com.avito.navigation.api.AppNavigator
 import com.avito.navigation.api.NavigationStateHolder

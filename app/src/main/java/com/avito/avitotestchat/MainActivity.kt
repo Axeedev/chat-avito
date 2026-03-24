@@ -8,6 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.arkivanov.mvikotlin.extensions.coroutines.stateFlow
 import com.avito.auth.api.SignUpRoute
 import com.avito.auth.impl.presentation.content.LoginScreen
@@ -20,8 +21,8 @@ import com.avito.chatlist.impl.presentation.content.ChatListScreen
 import com.avito.navigation.api.AppNavigator
 import com.avito.navigation.api.NavigationStateHolder
 import com.avito.navigation.impl.AppRoot
+import com.avito.profile.impl.presentation.ProfileViewModel
 import com.avito.profile.impl.presentation.content.ProfileScreen
-import com.avito.profile.impl.presentation.store.ProfileStoreFactory
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import javax.inject.Inject
@@ -35,16 +36,12 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var navigationStateHolder: NavigationStateHolder
 
-    @Inject
-    lateinit var profileStoreFactory: ProfileStoreFactory
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val store = profileStoreFactory.create()
         enableEdgeToEdge()
         setContent {
-            val state by store.stateFlow.collectAsState()
+            val viewModel : ProfileViewModel = hiltViewModel()
+            val state by viewModel.store.stateFlow.collectAsState()
             AvitoTestChatTheme(
                 darkTheme = state.isDarkTheme
             ){

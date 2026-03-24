@@ -39,7 +39,6 @@ android {
 
 
 dependencies {
-    implementation("com.google.protobuf:protobuf-javalite:4.34.1")
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
     implementation(project(":core:network"))

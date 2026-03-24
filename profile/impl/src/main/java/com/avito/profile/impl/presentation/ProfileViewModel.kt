@@ -11,4 +11,9 @@ class ProfileViewModel @Inject constructor(
 ) : ViewModel() {
 
     val store = storeFactory.create()
+
+    override fun onCleared() {
+        store.dispose()
+        super.onCleared()
+    }
 }

@@ -122,7 +122,17 @@ class ProfileStoreFactory @Inject constructor(
                 }
                 is ProfileIntent.UpdateProfileImage -> {
                     scope.launch {
-                        updatePhotoUseCase(intent.imageUri.toString())
+                        val result = updatePhotoUseCase(intent.imageUri.toString())
+
+                        when(result){
+                            is CommonResult.Failure -> {
+
+                            }
+                            CommonResult.Success -> {
+
+                            }
+                        }
+
                     }
                 }
 

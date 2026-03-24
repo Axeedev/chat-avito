@@ -12,4 +12,9 @@ class ChatListViewModel @Inject constructor(
 
     internal val store = storeFactory.create()
 
+    override fun onCleared() {
+        store.dispose()
+        super.onCleared()
+    }
+
 }

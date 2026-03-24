@@ -7,8 +7,9 @@ import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
 import com.avito.auth.impl.domain.GoogleSignInUseCase
 import com.avito.auth.impl.domain.LogInUseCase
 import com.avito.auth.impl.domain.SignUpUseCase
-import com.avito.auth.impl.presentation.store.AuthLabel.*
-import com.avito.auth.impl.presentation.store.AuthStoreFactory.Message.*
+import com.avito.auth.impl.presentation.store.AuthLabel.ErrorAuth
+import com.avito.auth.impl.presentation.store.AuthStoreFactory.Message.InputEmail
+import com.avito.auth.impl.presentation.store.AuthStoreFactory.Message.InputPassword
 import com.avito.auth.impl.utils.AuthValidator
 import com.avito.core.common.CommonResult
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException

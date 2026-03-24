@@ -11,4 +11,9 @@ class AuthViewModel @Inject constructor(
 ) : ViewModel() {
 
     internal val store = storeFactory.create()
+
+    override fun onCleared() {
+        store.dispose()
+        super.onCleared()
+    }
 }
