@@ -126,11 +126,9 @@ class ProfileStoreFactory @Inject constructor(
 
                         when(result){
                             is CommonResult.Failure -> {
-
+                                publish(ProfileLabel.Error("Something went wrong"))
                             }
-                            CommonResult.Success -> {
-
-                            }
+                            CommonResult.Success -> {}
                         }
 
                     }
