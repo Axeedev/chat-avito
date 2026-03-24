@@ -6,13 +6,22 @@ import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineBootstrapper
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
+import com.avito.core.common.Balance
 import com.avito.core.common.CommonResult
+import com.avito.core.common.ResultWrapper
+import com.avito.profile.impl.domain.GetBalanceUseCase
 import com.avito.profile.impl.domain.UserData
 import com.avito.profile.impl.domain.usecases.ChangeThemeUseCase
 import com.avito.profile.impl.domain.usecases.GetUserDataUseCase
 import com.avito.profile.impl.domain.usecases.UpdateNameUseCase
 import com.avito.profile.impl.domain.usecases.UpdatePhotoUseCase
+import com.avito.profile.impl.presentation.store.BalanceState.Loaded
+import com.avito.profile.impl.presentation.store.ProfileStoreFactory.Message.BalanceLoaded
+import com.avito.profile.impl.presentation.store.ProfileStoreFactory.Message.FinishLoading
+import com.avito.profile.impl.presentation.store.ProfileStoreFactory.Message.StartLoading
 import com.avito.profile.impl.presentation.store.ProfileStoreFactory.Message.UpdateNameField
+import com.avito.profile.impl.presentation.store.ProfileStoreFactory.Message.UpdateProfileImage
+import com.avito.profile.impl.presentation.store.ProfileStoreFactory.Message.UserDataLoaded
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -21,7 +30,8 @@ class ProfileStoreFactory @Inject constructor(
     private val updateNameUseCase: UpdateNameUseCase,
     private val updatePhotoUseCase: UpdatePhotoUseCase,
     private val getUserDataUseCase: GetUserDataUseCase,
-    private val changeThemeUseCase: ChangeThemeUseCase
+    private val changeThemeUseCase: ChangeThemeUseCase,
+    private val getBalanceUseCase: GetBalanceUseCase
 ) {
 
      fun create() : ProfileStore = object  : ProfileStore, Store<ProfileIntent, ProfileScreenState, ProfileLabel>
@@ -38,6 +48,12 @@ class ProfileStoreFactory @Inject constructor(
 
         data class UserDataLoaded(val userData: UserData) : Action
 
+        data class BalanceLoaded(val balance: Balance) : Action
+
+        data object BalanceError : Action
+
+        data object SessionExpired : Action
+
     }
 
     private sealed interface Message{
@@ -48,10 +64,13 @@ class ProfileStoreFactory @Inject constructor(
 
         data class UserDataLoaded(val userData: UserData) : Message
 
+        data class BalanceLoaded(val balance: Balance) : Message
+
+        data object BalanceError : Message
+
         data object StartLoading : Message
 
         data object FinishLoading : Message
-
 
     }
 
@@ -59,7 +78,18 @@ class ProfileStoreFactory @Inject constructor(
         override fun executeAction(action: Action) {
             when(action){
                 is Action.UserDataLoaded -> {
-                    dispatch(Message.UserDataLoaded(action.userData))
+                    dispatch(UserDataLoaded(action.userData))
+                }
+                Action.BalanceError -> {
+                    dispatch(Message.BalanceError)
+                }
+
+                is Action.BalanceLoaded -> {
+                    dispatch(BalanceLoaded(action.balance))
+                }
+
+                Action.SessionExpired -> {
+                    publish(ProfileLabel.Error("Session expired"))
                 }
             }
         }
@@ -112,10 +142,10 @@ class ProfileStoreFactory @Inject constructor(
                 is UpdateNameField -> {
                     copy(name = msg.newName, isSaveButtonEnabled = true)
                 }
-                is Message.UpdateProfileImage -> {
+                is UpdateProfileImage -> {
                     copy(profileImageUri = msg.imageUri.toUri())
                 }
-                is Message.UserDataLoaded -> {
+                is UserDataLoaded -> {
                     copy(
                         name = msg.userData.name,
                         profileImageUri = msg.userData.photoUri?.toUri(),
@@ -124,11 +154,18 @@ class ProfileStoreFactory @Inject constructor(
                     )
                 }
 
-                Message.FinishLoading -> {
+                FinishLoading -> {
                     copy(isSavingLoading = false)
                 }
-                Message.StartLoading -> {
+                StartLoading -> {
                     copy(isSavingLoading = true)
+                }
+
+                Message.BalanceError -> {
+                    copy(balance = BalanceState.Error)
+                }
+                is BalanceLoaded -> {
+                    copy(balance = Loaded(msg.balance))
                 }
 
             }
@@ -141,6 +178,22 @@ class ProfileStoreFactory @Inject constructor(
                 getUserDataUseCase().collect {userData ->
                     dispatch(Action.UserDataLoaded(userData))
                 }
+            }
+            scope.launch {
+                val result = getBalanceUseCase()
+
+                when(result){
+                    is ResultWrapper.Success<Balance> -> {
+                        dispatch(Action.BalanceLoaded(result.data))
+                    }
+                    is ResultWrapper.Unauthorized ->{
+                        dispatch(Action.SessionExpired)
+                    }
+                    else -> {
+                        dispatch(Action.BalanceError)
+                    }
+                }
+
             }
         }
     }

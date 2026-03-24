@@ -34,6 +34,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":core:common"))
     implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)

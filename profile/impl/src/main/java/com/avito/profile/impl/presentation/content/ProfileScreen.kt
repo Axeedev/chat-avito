@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -53,10 +54,12 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil3.compose.AsyncImage
 import com.arkivanov.mvikotlin.extensions.coroutines.labels
 import com.arkivanov.mvikotlin.extensions.coroutines.stateFlow
+import com.avito.core.common.ModelUsage
 import com.avito.core.ui.AppButton
 import com.avito.core.ui.AppSwitch
 import com.avito.core.ui.AuthTextField
 import com.avito.profile.impl.presentation.ProfileViewModel
+import com.avito.profile.impl.presentation.store.BalanceState
 import com.avito.profile.impl.presentation.store.ProfileLabel
 import com.avito.profile.impl.presentation.store.ProfileIntent
 import com.avito.profile.impl.presentation.store.ProfileScreenState
@@ -227,8 +230,19 @@ internal fun ProfileContent(
                     isError = false,
                     onValueChange = {}
                 )
-
             }
+
+            item {
+                Text(
+                    text = "Your balance"
+                )
+                Spacer(
+                    modifier = Modifier.size(16.dp)
+                )
+
+                BalanceCard(balance = state.balance)
+            }
+
             item {
 
                 ProfileField(
@@ -316,6 +330,108 @@ fun ProfileField(
             }
             secondaryContent()
 
+        }
+    }
+}
+
+
+@Composable
+private fun BalanceCard(
+    modifier: Modifier = Modifier,
+    balance: BalanceState
+){
+    Column(
+        modifier = modifier
+            .fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+
+        when(balance){
+            BalanceState.Error -> {
+                BalanceStateErrorCard()
+
+            }
+            is BalanceState.Loaded -> {
+
+                balance.data.balance.forEach { usage ->
+                    UsageCard(
+                        usage = usage
+                    )
+                }
+            }
+            BalanceState.Loading -> {
+                BalanceStateLoadingCard()
+            }
+        }
+    }
+}
+@Composable
+fun BalanceStateLoadingCard(
+    modifier: Modifier = Modifier
+){
+    Card(
+        modifier = modifier
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxHeight()
+                .padding(all = 16.dp)
+        ) {
+
+            CircularProgressIndicator()
+        }
+    }
+}
+
+@Composable
+fun BalanceStateErrorCard(
+    modifier: Modifier = Modifier
+){
+    Card(
+        modifier = modifier
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxHeight()
+                .padding(all = 16.dp)
+        ) {
+
+            Text(
+                text = "Data is not available",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(Modifier.size(16.dp))
+            Text(
+                text = "Check your internet connection"
+            )
+        }
+    }
+}
+
+@Composable
+private fun UsageCard(
+    modifier: Modifier = Modifier,
+    usage: ModelUsage
+){
+    Card(
+        modifier = modifier
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxHeight()
+                .padding(all = 16.dp)
+        ) {
+
+            Text(
+                text = usage.usage,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(Modifier.size(16.dp))
+            Text(
+                text = "${usage.value} tokens left"
+            )
         }
     }
 }

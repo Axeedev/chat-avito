@@ -45,6 +45,7 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
     implementation(project(":profile:api"))
+    implementation(project(":chat:api"))
     implementation(project(":core:common"))
     implementation(project(":core:ui"))
     implementation(platform(libs.androidx.compose.bom))

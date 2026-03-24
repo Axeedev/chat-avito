@@ -1,5 +1,6 @@
 package com.avito.chat.impl.di
 
+import com.avito.chat.api.ApiChatRepository
 import com.avito.chat.impl.data.ChatRepositoryImpl
 import com.avito.chat.impl.data.remote.ChatApiService
 import com.avito.chat.impl.domain.ChatRepository
@@ -20,6 +21,10 @@ interface ChatModule {
     @Binds
     @Singleton
     fun bindChatRepository(chatRepositoryImpl: ChatRepositoryImpl): ChatRepository
+
+    @Binds
+    @Singleton
+    fun bindApiChatRepository(chatRepositoryImpl: ChatRepositoryImpl): ApiChatRepository
 
     companion object {
 

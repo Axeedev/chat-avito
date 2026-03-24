@@ -4,7 +4,6 @@ package com.avito.chat.impl.presentation.content
 
 import android.content.Context
 import android.content.Intent
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -17,7 +16,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -57,7 +55,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.min
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.arkivanov.mvikotlin.extensions.coroutines.labels
@@ -90,9 +87,9 @@ fun ChatContent(
                 ChatLabel.ClickBack -> {
                     onBackClick()
                 }
-                ChatLabel.NetworkError -> {
-                    Log.d("insertMessage", "network error")
-                    snackbarState.showSnackbar("An error has occurred. Try again by taping on your message")
+
+                is ChatLabel.NetworkError -> {
+                    snackbarState.showSnackbar(it.message)
                 }
             }
         }

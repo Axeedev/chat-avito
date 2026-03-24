@@ -16,9 +16,9 @@ import com.avito.chat.impl.presentation.store.ChatStoreFactory.ChatStoreMessage.
 import com.avito.chat.impl.presentation.store.ChatStoreFactory.ChatStoreMessage.MessageSent
 import com.avito.chat.impl.presentation.store.ChatStoreFactory.ChatStoreMessage.MessagesLoaded
 import com.avito.chatlist.api.ChatListRepository
-import com.avito.core.common.CommonResult
 import com.avito.core.common.Message
 import com.avito.core.common.MessageStatus
+import com.avito.core.common.ResultWrapper
 import com.avito.core.common.Role
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,14 +28,14 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-class  ChatStoreFactory @Inject constructor(
+class ChatStoreFactory @Inject constructor(
     private val storeFactory: StoreFactory,
     private val insertMessageUseCase: InsertMessageUseCase,
     private val getMessagesUseCase: GetMessagesUseCase,
     private val createChatUseCase: CreateChatUseCase,
     private val chatListRepository: ChatListRepository,
 
-) {
+    ) {
     private val chatIdFlow: MutableStateFlow<Int?> = MutableStateFlow(null)
 
     internal fun create(chatId: Int?): ChatStore {
@@ -98,7 +98,9 @@ class  ChatStoreFactory @Inject constructor(
 
                 MessageSent -> {
                     when (this) {
-                        is ChatScreenState.ChatScreenInitial -> { this }
+                        is ChatScreenState.ChatScreenInitial -> {
+                            this
+                        }
 
                         is ChatScreenState.ChatScreenStateLoaded -> {
                             copy(messageField = "", isResponsePending = true)
@@ -120,14 +122,14 @@ class  ChatStoreFactory @Inject constructor(
 
                 ChatStoreMessage.ReceiveAnswer -> {
                     when (this) {
-                        is ChatScreenState.ChatScreenInitial -> { this }
-
+                        is ChatScreenState.ChatScreenInitial -> {
+                            this
+                        }
                         is ChatScreenState.ChatScreenStateLoaded -> {
                             copy(isResponsePending = false)
                         }
                     }
                 }
-
             }
         }
     }
@@ -166,6 +168,11 @@ class  ChatStoreFactory @Inject constructor(
                 is Action.ChatTitleLoaded -> {
                     dispatch(ChatTitleLoaded(action.title))
                 }
+
+                Action.Unauthorized -> {
+                    dispatch(ChatStoreMessage.ReceiveAnswer)
+                    publish(ChatLabel.NetworkError(("Session expired")))
+                }
             }
         }
 
@@ -185,7 +192,7 @@ class  ChatStoreFactory @Inject constructor(
 
                 ChatIntent.SendMessage -> {
                     scope.launch {
-                        if (state() is ChatScreenState.ChatScreenStateLoaded){
+                        if (state() is ChatScreenState.ChatScreenStateLoaded) {
                             val message = state().messageField
 
                             val currentChatId = chatIdFlow.value
@@ -202,12 +209,16 @@ class  ChatStoreFactory @Inject constructor(
                                 ),
                                 chatId
                             )
-                            when(result){
-                                is CommonResult.Failure -> {
-                                    publish(ChatLabel.NetworkError)
-                                }
-                                CommonResult.Success -> {
+                            dispatch(ChatStoreMessage.ReceiveAnswer)
+                            when (result) {
+                                is ResultWrapper.Success<*> -> {
                                     dispatch(ChatStoreMessage.ReceiveAnswer)
+                                }
+                                ResultWrapper.Unauthorized -> {
+                                    publish(ChatLabel.NetworkError("Session is expired"))
+                                }
+                                else -> {
+                                    publish(ChatLabel.NetworkError("Something went wrong. Check your internet connection and try again by tapping on your message"))
                                 }
                             }
                         }
@@ -227,14 +238,17 @@ class  ChatStoreFactory @Inject constructor(
                                 ),
                                 chatId = id
                             )
-                            when(result){
-                            is CommonResult.Failure -> {
-                                publish(ChatLabel.NetworkError)
+                            dispatch(ChatStoreMessage.ReceiveAnswer)
+                            when (result) {
+                                is ResultWrapper.Success<*> -> {
+                                }
+                                ResultWrapper.Unauthorized -> {
+                                    publish(ChatLabel.NetworkError("Session is expired"))
+                                }
+                                else -> {
+                                    publish(ChatLabel.NetworkError("Something went wrong. Check your internet connection and try again by tapping on your message"))
+                                }
                             }
-                            CommonResult.Success -> {
-                                dispatch(ChatStoreMessage.ReceiveAnswer)
-                            }
-                        }
                         }
                     }
                 }
@@ -265,6 +279,8 @@ class  ChatStoreFactory @Inject constructor(
         data class MessagesLoaded(val messages: List<Message>) : Action
 
         data class ChatTitleLoaded(val title: String) : Action
+
+        data object Unauthorized : Action
 
     }
 

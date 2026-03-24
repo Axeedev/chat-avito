@@ -1,14 +1,16 @@
 package com.avito.chat.impl.data
 
 import android.util.Log
+import com.avito.chat.api.ApiChatRepository
 import com.avito.chat.impl.data.remote.ChatApiService
 import com.avito.chat.impl.data.remote.Models
 import com.avito.chat.impl.data.remote.dtos.ChatRequestDto
 import com.avito.chat.impl.data.remote.dtos.MessageDto
 import com.avito.chat.impl.domain.ChatRepository
-import com.avito.core.common.CommonResult
+import com.avito.core.common.Balance
 import com.avito.core.common.Message
 import com.avito.core.common.MessageStatus
+import com.avito.core.common.ResultWrapper
 import com.avito.core.common.Role
 import com.avito.core.database.data.ChatDao
 import com.avito.core.database.data.ChatEntity
@@ -17,6 +19,7 @@ import com.avito.core.database.data.MessageEntity
 import com.avito.tokens.api.TokenRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import retrofit2.HttpException
 import javax.inject.Inject
 
 class ChatRepositoryImpl @Inject constructor(
@@ -24,7 +27,7 @@ class ChatRepositoryImpl @Inject constructor(
     private val chatDao: ChatDao,
     private val tokenRepository: TokenRepository,
     private val chatApiService: ChatApiService
-) : ChatRepository {
+) : ChatRepository, ApiChatRepository {
 
     override fun getMessages(chatId: Int): Flow<List<Message>> {
         return messageDao.getMessagesByChatId(chatId).map { list ->
@@ -34,13 +37,12 @@ class ChatRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun insertMessage(message: Message, chatId: Int): CommonResult {
+    override suspend fun insertMessage(message: Message, chatId: Int): ResultWrapper<Any> {
+
         val messageId = messageDao.insertMessage(
             messageEntity = message.toMessageEntity(chatId)
         )
         return try {
-
-
             val token = tokenRepository.getValidAccessToken()
 
             val messages = listOf(
@@ -92,15 +94,21 @@ class ChatRepositoryImpl @Inject constructor(
                 chatDao.updateChat(chatId = chatId, updatedAt = System.currentTimeMillis())
             }
 
+            ResultWrapper.Success(Any())
 
-            CommonResult.Success
+        }
+        catch (e: HttpException){
+            if (e.code() == 401) {
+                ResultWrapper.Unauthorized
+            } else {
+                ResultWrapper.ApiError(e.code(), e.message())
+            }
+        }
+        catch (e: Exception) {
+            e.printStackTrace()
 
-        } catch (e: Exception) {
-
-            Log.d("insertMessage", "${message.content}")
             updateMessageStatus(messageId.toInt(), MessageStatus.ERROR)
-
-            CommonResult.Failure(e)
+            ResultWrapper.UnknownError(e)
         }
     }
 
@@ -118,5 +126,29 @@ class ChatRepositoryImpl @Inject constructor(
         )
         val chatId = chatDao.insertChat(chat)
         return chatId
+    }
+
+    override suspend fun getCurrentBalance(): ResultWrapper<Balance> {
+
+        try {
+            val token = tokenRepository.getValidAccessToken()
+
+            val response = chatApiService.getBalance("Bearer $token")
+
+            if (!response.isSuccessful || response.body() == null){
+                throw RuntimeException()
+            }
+            val responseBody = response.body() ?: throw RuntimeException()
+
+            return ResultWrapper.Success(responseBody.toBalance())
+        }catch (e: Exception){
+            e.printStackTrace()
+            return when(e){
+                is HttpException -> ResultWrapper.Unauthorized
+
+                else -> ResultWrapper.UnknownError(e)
+
+            }
+        }
     }
 }
