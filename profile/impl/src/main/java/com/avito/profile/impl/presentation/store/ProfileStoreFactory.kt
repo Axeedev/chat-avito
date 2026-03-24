@@ -1,5 +1,6 @@
 package com.avito.profile.impl.presentation.store
 
+import android.net.Uri
 import androidx.core.net.toUri
 import com.arkivanov.mvikotlin.core.store.Reducer
 import com.arkivanov.mvikotlin.core.store.Store
@@ -12,10 +13,14 @@ import com.avito.core.common.ResultWrapper
 import com.avito.profile.impl.domain.GetBalanceUseCase
 import com.avito.profile.impl.domain.UserData
 import com.avito.profile.impl.domain.usecases.ChangeThemeUseCase
+import com.avito.profile.impl.domain.usecases.GetAvatarUseCase
+import com.avito.profile.impl.domain.usecases.GetThemeUseCase
 import com.avito.profile.impl.domain.usecases.GetUserDataUseCase
 import com.avito.profile.impl.domain.usecases.UpdateNameUseCase
 import com.avito.profile.impl.domain.usecases.UpdatePhotoUseCase
 import com.avito.profile.impl.presentation.store.BalanceState.Loaded
+import com.avito.profile.impl.presentation.store.ProfileLabel.Error
+import com.avito.profile.impl.presentation.store.ProfileStoreFactory.Message.*
 import com.avito.profile.impl.presentation.store.ProfileStoreFactory.Message.BalanceLoaded
 import com.avito.profile.impl.presentation.store.ProfileStoreFactory.Message.FinishLoading
 import com.avito.profile.impl.presentation.store.ProfileStoreFactory.Message.StartLoading
@@ -31,7 +36,9 @@ class ProfileStoreFactory @Inject constructor(
     private val updatePhotoUseCase: UpdatePhotoUseCase,
     private val getUserDataUseCase: GetUserDataUseCase,
     private val changeThemeUseCase: ChangeThemeUseCase,
-    private val getBalanceUseCase: GetBalanceUseCase
+    private val getBalanceUseCase: GetBalanceUseCase,
+    private val getThemeUseCase: GetThemeUseCase,
+    private val getAvatarUseCase: GetAvatarUseCase
 ) {
 
      fun create() : ProfileStore = object  : ProfileStore, Store<ProfileIntent, ProfileScreenState, ProfileLabel>
@@ -48,6 +55,10 @@ class ProfileStoreFactory @Inject constructor(
 
         data class UserDataLoaded(val userData: UserData) : Action
 
+        data class ThemeLoaded(val theme: Boolean) : Action
+
+        data class AvatarLoaded(val avatar: String) : Action
+
         data class BalanceLoaded(val balance: Balance) : Action
 
         data object BalanceError : Action
@@ -63,6 +74,10 @@ class ProfileStoreFactory @Inject constructor(
         data class UpdateProfileImage(val imageUri: String) : Message
 
         data class UserDataLoaded(val userData: UserData) : Message
+
+        data class AvatarLoaded(val avatar: Uri) : Message
+
+        data class ThemeLoaded(val theme: Boolean) : Message
 
         data class BalanceLoaded(val balance: Balance) : Message
 
@@ -81,7 +96,7 @@ class ProfileStoreFactory @Inject constructor(
                     dispatch(UserDataLoaded(action.userData))
                 }
                 Action.BalanceError -> {
-                    dispatch(Message.BalanceError)
+                    dispatch(BalanceError)
                 }
 
                 is Action.BalanceLoaded -> {
@@ -89,7 +104,15 @@ class ProfileStoreFactory @Inject constructor(
                 }
 
                 Action.SessionExpired -> {
-                    publish(ProfileLabel.Error("Session expired"))
+                    publish(Error("Session expired"))
+                }
+
+                is Action.ThemeLoaded -> {
+                    dispatch(ThemeLoaded(action.theme))
+                }
+
+                is Action.AvatarLoaded -> {
+                    dispatch(AvatarLoaded(action.avatar.toUri()))
                 }
             }
         }
@@ -98,7 +121,7 @@ class ProfileStoreFactory @Inject constructor(
             when(intent){
                 ProfileIntent.ClickUpdateName -> {
                     scope.launch {
-                        dispatch(Message.StartLoading)
+                        dispatch(StartLoading)
                         val name = state().name?.trim()
                         val result = name?.let {
                             updateNameUseCase(name)
@@ -111,7 +134,7 @@ class ProfileStoreFactory @Inject constructor(
                                 CommonResult.Success -> {}
                             }
                         }
-                        dispatch(Message.FinishLoading)
+                        dispatch(FinishLoading)
                     }
                 }
                 ProfileIntent.SignOut -> {
@@ -130,13 +153,13 @@ class ProfileStoreFactory @Inject constructor(
                             }
                             CommonResult.Success -> {}
                         }
-
                     }
                 }
 
                 is ProfileIntent.ChangeTheme -> {
                     scope.launch {
                         changeThemeUseCase(isDark = intent.isDark)
+                        dispatch(ThemeLoaded(intent.isDark))
                     }
                 }
             }
@@ -158,7 +181,6 @@ class ProfileStoreFactory @Inject constructor(
                         name = msg.userData.name,
                         profileImageUri = msg.userData.photoUri?.toUri(),
                         email = msg.userData.email,
-                        isDarkTheme = msg.userData.isDarkTheme
                     )
                 }
 
@@ -169,13 +191,20 @@ class ProfileStoreFactory @Inject constructor(
                     copy(isSavingLoading = true)
                 }
 
-                Message.BalanceError -> {
+                BalanceError -> {
                     copy(balance = BalanceState.Error)
                 }
                 is BalanceLoaded -> {
                     copy(balance = Loaded(msg.balance))
                 }
 
+                is ThemeLoaded -> {
+                    copy(isDarkTheme = msg.theme)
+                }
+
+                is AvatarLoaded -> {
+                    copy(profileImageUri = msg.avatar)
+                }
             }
         }
     }
@@ -183,8 +212,19 @@ class ProfileStoreFactory @Inject constructor(
     private inner class Bootstrapper : CoroutineBootstrapper<Action>(){
         override fun invoke() {
             scope.launch {
-                getUserDataUseCase().collect {userData ->
-                    dispatch(Action.UserDataLoaded(userData))
+                getThemeUseCase().collect { theme ->
+                    dispatch(Action.ThemeLoaded(theme))
+                }
+            }
+
+            scope.launch {
+                getUserDataUseCase().collect { data ->
+                    dispatch(Action.UserDataLoaded(data))
+                }
+            }
+            scope.launch {
+                getAvatarUseCase().collect { uri ->
+                    dispatch(Action.AvatarLoaded(uri))
                 }
             }
             scope.launch {

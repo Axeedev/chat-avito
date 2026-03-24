@@ -1,6 +1,7 @@
 package com.avito.profile.impl.data
 
 import android.content.Context
+import android.util.Log
 import androidx.core.net.toUri
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
@@ -15,6 +16,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
@@ -30,16 +32,18 @@ class ProfileRepositoryImpl @Inject constructor(
     private val themePreferencesKey = booleanPreferencesKey("theme")
 
     override fun getUserData(): Flow<UserData> {
-        return combine(
-            flow = userDataFlow(),
-            flow2 = context.dataStore.data
-        ){ userData, prefs ->
-            UserData(
-                name = userData.name,
-                email = userData.email,
-                photoUri = prefs[imagePreferencesKey],
-                isDarkTheme = prefs[themePreferencesKey] ?: false
-            )
+        return userDataFlow()
+    }
+
+    override fun getTheme(): Flow<Boolean> {
+        return context.dataStore.data.map {
+            it[themePreferencesKey] ?: false
+        }
+    }
+
+    override fun getAvatar(): Flow<String> {
+        return context.dataStore.data.map {
+            it[imagePreferencesKey] ?: ""
         }
     }
 
@@ -60,8 +64,7 @@ class ProfileRepositoryImpl @Inject constructor(
                     UserData(
                         name = firebaseUser.displayName,
                         email = email,
-                        photoUri = "",
-                        isDarkTheme = false
+                        photoUri = ""
                     )
                 )
             }

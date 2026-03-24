@@ -7,6 +7,10 @@ interface ProfileRepository {
 
     fun getUserData(): Flow<UserData>
 
+    fun getTheme() : Flow<Boolean>
+
+    fun getAvatar() : Flow<String>
+
     suspend fun updateName(name: String): CommonResult
 
     suspend fun updateAvatar(uri: String): CommonResult

@@ -60,8 +60,8 @@ import com.avito.core.ui.AppSwitch
 import com.avito.core.ui.AuthTextField
 import com.avito.profile.impl.presentation.ProfileViewModel
 import com.avito.profile.impl.presentation.store.BalanceState
-import com.avito.profile.impl.presentation.store.ProfileLabel
 import com.avito.profile.impl.presentation.store.ProfileIntent
+import com.avito.profile.impl.presentation.store.ProfileLabel
 import com.avito.profile.impl.presentation.store.ProfileScreenState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 
@@ -181,6 +181,9 @@ internal fun ProfileContent(
                         modifier = Modifier
                             .size(150.dp)
                             .clip(CircleShape)
+                            .clickable{
+                                launcher.launch("image/*")
+                            }
                     ) {
                         AsyncImage(
                             modifier = Modifier
