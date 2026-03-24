@@ -1,10 +1,10 @@
 package com.avito.chat.impl.data
 
-import android.util.Log
 import com.avito.chat.api.ApiChatRepository
 import com.avito.chat.impl.data.remote.ChatApiService
 import com.avito.chat.impl.data.remote.Models
 import com.avito.chat.impl.data.remote.dtos.ChatRequestDto
+import com.avito.chat.impl.data.remote.dtos.ChatResponseDto
 import com.avito.chat.impl.data.remote.dtos.MessageDto
 import com.avito.chat.impl.domain.ChatRepository
 import com.avito.core.common.Balance
@@ -37,65 +37,95 @@ class ChatRepositoryImpl @Inject constructor(
         }
     }
 
+    private suspend fun insertApiResponse(
+        chatResponseDto: ChatResponseDto,
+        chatId: Int
+    ){
+        chatResponseDto.choices.forEach { choiceDto ->
+
+            val message = choiceDto.message
+            messageDao.insertMessage(
+                messageEntity = MessageEntity(
+                    id = 0,
+                    chatId = chatId,
+                    content = message.content,
+                    role = Role.MODEL,
+                    createdAt = System.currentTimeMillis(),
+                    status = MessageStatus.SENDING
+                )
+            )
+        }
+    }
+
+    private suspend fun prepareMessageForSending(
+        chatId: Int
+    ): List<MessageDto>{
+
+        val previousMessages = chatDao.getMessagesList(chatId).map { it.toMessageDto() }
+        val promptMessage = MessageDto(
+            role = "user",
+            content = "Ответь только на это последнее в запросе, остальные даны для понимания контекста диалога"
+        )
+
+        val contextMessages = mutableListOf(promptMessage)
+
+        previousMessages.forEach {
+            contextMessages.add(it)
+        }
+        return contextMessages
+    }
+
+    private suspend fun processChat(
+        chatId: Int,
+        message: Message
+    ){
+        val chat = chatDao.getChatById(chatId)
+
+        if (chat.updatedAt == null) {
+            chatDao.updateChatTitle(
+                chatId = chatId,
+                updatedAt = System.currentTimeMillis(),
+                newTitle = message.content
+            )
+        } else {
+            chatDao.updateChat(chatId = chatId, updatedAt = System.currentTimeMillis())
+        }
+    }
+
     override suspend fun insertMessage(message: Message, chatId: Int): ResultWrapper<Any> {
 
         val messageId = messageDao.insertMessage(
             messageEntity = message.toMessageEntity(chatId)
         )
+
         return try {
             val token = tokenRepository.getValidAccessToken()
 
-            val messages = listOf(
-                MessageDto(
-                    role = "user",
-                    content = message.content
-                )
-            )
+            val contextMessages = prepareMessageForSending(chatId)
 
             updateMessageStatus(messageId.toInt(), MessageStatus.SENT)
+
             val chatResponse = chatApiService.getAssistantResponse(
                 authorization = "Bearer $token",
                 chatRequest = ChatRequestDto(
                     model = Models.GIGACHAT_BASIC,
-                    messages = messages
+                    messages = contextMessages
                 )
             )
 
             if (!chatResponse.isSuccessful || chatResponse.body() == null) {
-                Log.d("ChatRepositoryImpl", "Ошибка распознавания: ${chatResponse.message()}")
+                return ResultWrapper.OtherError("Unknown error")
             }
-            val chatResult = chatResponse.body()
-                ?: throw Exception("Ошибка распознавания: ${chatResponse.message()}")
+            val chatResult = chatResponse.body() ?: return ResultWrapper.OtherError("Unknown error")
 
-            chatResult.choices.forEach { choiceDto ->
+            insertApiResponse(chatResult, chatId)
 
-                val message = choiceDto.message
-                messageDao.insertMessage(
-                    messageEntity = MessageEntity(
-                        id = 0,
-                        chatId = chatId,
-                        content = message.content,
-                        role = Role.MODEL,
-                        createdAt = System.currentTimeMillis(),
-                        status = MessageStatus.SENDING
-                    )
-                )
-            }
-
-            val chat = chatDao.getChatById(chatId)
-
-            if (chat.updatedAt == null) {
-                chatDao.updateChatTitle(
-                    chatId = chatId,
-                    updatedAt = System.currentTimeMillis(),
-                    newTitle = message.content
-                )
-            } else {
-                chatDao.updateChat(chatId = chatId, updatedAt = System.currentTimeMillis())
-            }
+            processChat(
+                chatId,
+                message
+            )
 
             ResultWrapper.Success(Any())
-
         }
         catch (e: HttpException){
             if (e.code() == 401) {
@@ -142,12 +172,13 @@ class ChatRepositoryImpl @Inject constructor(
 
             return ResultWrapper.Success(responseBody.toBalance())
         }catch (e: Exception){
+
             e.printStackTrace()
             return when(e){
+
                 is HttpException -> ResultWrapper.Unauthorized
 
                 else -> ResultWrapper.UnknownError(e)
-
             }
         }
     }

@@ -16,4 +16,7 @@ sealed class ResultWrapper<out T> {
     ) : ResultWrapper<Nothing>()
 
     data class UnknownError(val throwable: Throwable) : ResultWrapper<Nothing>()
+
+    data class OtherError(val message: String) : ResultWrapper<Nothing>()
+
 }

@@ -108,7 +108,7 @@ fun ChatContent(
         onSend = {
             store.accept(ChatIntent.SendMessage)
         },
-        onRetry = {id, message ->
+        onRetry = { id, message ->
             store.accept(ChatIntent.RetryMessage(id, message))
         }
     )
@@ -131,7 +131,7 @@ private fun ChatContent(
         snackbarHost = {
             SnackbarHost(
                 hostState = snackbarHostState
-            ){
+            ) {
                 Snackbar(
                     snackbarData = it
                 )
@@ -146,9 +146,10 @@ private fun ChatContent(
                             overflow = TextOverflow.Ellipsis,
                             maxLines = 1
                         )
-                        when{
+                        when {
                             currentState is ChatScreenState.ChatScreenStateLoaded
                                     && currentState.isResponsePending -> TypingText()
+
                             else -> Text(
                                 text = "online",
                                 fontSize = 12.sp,
@@ -195,16 +196,11 @@ private fun ChatContent(
                 }
 
                 is ChatScreenState.ChatScreenStateLoaded -> {
-                    val isAtBottom by remember {
-                        derivedStateOf {
-                            listState.firstVisibleItemIndex >= currentState.messages.lastIndex - 1
-                        }
-                    }
+
 
                     LaunchedEffect(currentState.messages.size) {
-                        if (isAtBottom) {
-                            listState.animateScrollToItem(0)
-                        }
+                        listState.animateScrollToItem(0)
+
                     }
 
                     if (currentState.messages.isNotEmpty()) {
@@ -222,7 +218,7 @@ private fun ChatContent(
                                 MessageItem(
                                     message = message,
                                     context = context
-                                ){
+                                ) {
                                     onRetry(message.id, message.content)
                                 }
                             }
@@ -324,19 +320,21 @@ fun MessageItem(
                     fontSize = 16.sp
                 )
                 Spacer(modifier = Modifier.height(4.dp))
-                if (message.role == Role.USER){
+                if (message.role == Role.USER) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                     ) {
                         Spacer(Modifier.weight(1f))
-                        val iconId = when(message.status){
+                        val iconId = when (message.status) {
                             MessageStatus.SENDING -> {
                                 com.avito.chat.impl.R.drawable.ic_sending
                             }
+
                             MessageStatus.SENT -> {
                                 com.avito.chat.impl.R.drawable.ic_done
                             }
+
                             MessageStatus.ERROR -> {
                                 com.avito.chat.impl.R.drawable.ic_error
                             }
@@ -364,7 +362,10 @@ fun InputField(
     onClear: () -> Unit
 ) {
 
-    val tintColor = if (isInputFieldButtonsEnabled) MaterialTheme.colorScheme.onBackground else Color.Gray.copy(alpha = 0.4f)
+    val tintColor =
+        if (isInputFieldButtonsEnabled) MaterialTheme.colorScheme.onBackground else Color.Gray.copy(
+            alpha = 0.4f
+        )
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -393,7 +394,12 @@ fun InputField(
                 textStyle = TextStyle(
                     color = MaterialTheme.colorScheme.onBackground,
                 ),
-                cursorBrush = Brush.linearGradient(listOf(MaterialTheme.colorScheme.onBackground,MaterialTheme.colorScheme.onBackground)),
+                cursorBrush = Brush.linearGradient(
+                    listOf(
+                        MaterialTheme.colorScheme.onBackground,
+                        MaterialTheme.colorScheme.onBackground
+                    )
+                ),
                 maxLines = 100,
                 decorationBox = { inner ->
                     if (text.isEmpty()) {

@@ -2,6 +2,7 @@ package com.avito.chat.impl.data
 
 import com.avito.chat.impl.data.remote.dtos.BalanceDto
 import com.avito.chat.impl.data.remote.dtos.BalanceResponseDto
+import com.avito.chat.impl.data.remote.dtos.MessageDto
 import com.avito.core.common.Balance
 import com.avito.core.common.Message
 import com.avito.core.common.ModelUsage
@@ -22,6 +23,11 @@ fun Message.toMessageEntity(chatId: Int) = MessageEntity(
     createdAt = createdAt,
     chatId = chatId,
     status = status
+)
+
+fun MessageEntity.toMessageDto() = MessageDto(
+    role = "user",
+    content = content
 )
 
 fun BalanceResponseDto.toBalance() = Balance(

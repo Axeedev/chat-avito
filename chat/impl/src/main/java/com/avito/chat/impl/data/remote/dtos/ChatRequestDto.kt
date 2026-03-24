@@ -14,7 +14,7 @@ data class ChatRequestDto(
     @SerialName("stream")
     val stream: Boolean = false,
     @SerialName("max_tokens")
-    val maxTokens: Int = 256,
+    val maxTokens: Int = 512,
     @SerialName("repetition_penalty")
     val repetitionPenalty: Double = 1.0,
     @SerialName("update_interval")
