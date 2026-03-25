@@ -8,7 +8,7 @@ internal sealed class ChatScreenState(
     open val messageField: String = "",
 ){
     val isSendMessageButtonEnabled
-        get() = messageField.isNotEmpty()
+        get() = messageField.trim().isNotEmpty()
 
     data class ChatScreenStateLoaded(
         override val chatTitle: String = "",

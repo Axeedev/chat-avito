@@ -2,7 +2,7 @@ package com.avito.auth.impl.utils
 
 import android.util.Patterns
 
-object AuthValidator {
+internal object AuthValidator {
     fun validateEmail(email: String) : Boolean{
         return Patterns.EMAIL_ADDRESS.matcher(email).matches()
     }

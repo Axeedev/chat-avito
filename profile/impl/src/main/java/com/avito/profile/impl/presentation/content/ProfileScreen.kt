@@ -113,7 +113,7 @@ fun ProfileScreen(
 
 
 @Composable
-internal fun ProfileContent(
+private fun ProfileContent(
     screenState: State<ProfileScreenState>,
     snackbarHostState: SnackbarHostState,
     onNameChange: (String) -> Unit,
@@ -292,7 +292,7 @@ internal fun ProfileContent(
 
 
 @Composable
-fun ProfileField(
+private fun ProfileField(
     modifier: Modifier = Modifier,
     mainText: String,
     shape: Shape,
@@ -369,7 +369,7 @@ private fun BalanceCard(
     }
 }
 @Composable
-fun BalanceStateLoadingCard(
+private fun BalanceStateLoadingCard(
     modifier: Modifier = Modifier
 ){
     Card(
@@ -387,7 +387,7 @@ fun BalanceStateLoadingCard(
 }
 
 @Composable
-fun BalanceStateErrorCard(
+private fun BalanceStateErrorCard(
     modifier: Modifier = Modifier
 ){
     Card(

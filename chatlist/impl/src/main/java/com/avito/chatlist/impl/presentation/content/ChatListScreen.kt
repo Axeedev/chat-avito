@@ -398,7 +398,7 @@ private fun ChatItem(
 }
 
 @Composable
-fun PaginationLoader() {
+private fun PaginationLoader() {
     Box(
         modifier = Modifier
             .fillMaxWidth()

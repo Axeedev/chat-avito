@@ -263,7 +263,7 @@ private fun ChatContent(
 }
 
 @Composable
-fun MessageItem(
+private fun MessageItem(
     modifier: Modifier = Modifier,
     message: Message,
     context: Context,
@@ -352,7 +352,7 @@ fun MessageItem(
 }
 
 @Composable
-fun InputField(
+private fun InputField(
     modifier: Modifier = Modifier,
     text: String,
     isInputFieldButtonsEnabled: Boolean,
@@ -442,7 +442,7 @@ fun InputField(
 }
 
 @Composable
-fun TypingText() {
+private fun TypingText() {
     var dots by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
