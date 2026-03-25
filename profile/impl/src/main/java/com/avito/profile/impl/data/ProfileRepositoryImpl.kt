@@ -39,9 +39,9 @@ class ProfileRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getAvatar(): Flow<String> {
+    override fun getAvatar(): Flow<String?> {
         return context.dataStore.data.map {
-            it[imagePreferencesKey] ?: ""
+            it[imagePreferencesKey]
         }
     }
 

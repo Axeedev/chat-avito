@@ -57,7 +57,7 @@ class ProfileStoreFactory @Inject constructor(
 
         data class ThemeLoaded(val theme: Boolean) : Action
 
-        data class AvatarLoaded(val avatar: String) : Action
+        data class AvatarLoaded(val avatar: String?) : Action
 
         data class BalanceLoaded(val balance: Balance) : Action
 
@@ -75,7 +75,7 @@ class ProfileStoreFactory @Inject constructor(
 
         data class UserDataLoaded(val userData: UserData) : Message
 
-        data class AvatarLoaded(val avatar: Uri) : Message
+        data class AvatarLoaded(val avatar: Uri?) : Message
 
         data class ThemeLoaded(val theme: Boolean) : Message
 
@@ -112,7 +112,7 @@ class ProfileStoreFactory @Inject constructor(
                 }
 
                 is Action.AvatarLoaded -> {
-                    dispatch(AvatarLoaded(action.avatar.toUri()))
+                    dispatch(AvatarLoaded(action.avatar?.toUri()))
                 }
             }
         }

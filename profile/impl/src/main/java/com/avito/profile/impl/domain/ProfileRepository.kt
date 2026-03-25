@@ -9,7 +9,7 @@ interface ProfileRepository {
 
     fun getTheme() : Flow<Boolean>
 
-    fun getAvatar() : Flow<String>
+    fun getAvatar() : Flow<String?>
 
     suspend fun updateName(name: String): CommonResult
 

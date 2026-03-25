@@ -1,5 +1,6 @@
 package com.avito.auth.impl.presentation.store
 
+import androidx.credentials.exceptions.NoCredentialException
 import com.arkivanov.mvikotlin.core.store.Reducer
 import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
@@ -152,6 +153,9 @@ class AuthStoreFactory @Inject constructor(
 private fun getMessageFromErrorResult(errorResult: CommonResult.Failure): String {
 
     return when (errorResult.exception) {
+        is NoCredentialException ->{
+            "No data about google accounts received"
+        }
         is FirebaseAuthInvalidCredentialsException -> {
             "Invalid email or password."
         }
